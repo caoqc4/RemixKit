@@ -12,7 +12,12 @@ export async function POST(request: Request) {
 
   const statuses = await getProviderStatuses();
   const allowedKeys = new Set(
-    [...statuses.analysis, ...statuses.generation, ...statuses.transcription].map((provider) => provider.envKey)
+    [
+      ...statuses.analysis,
+      ...statuses.generation,
+      ...statuses.transcription,
+      { envKey: "OPENROUTER_API_KEY" },
+    ].map((provider) => provider.envKey)
   );
 
   if (!allowedKeys.has(envKey)) {

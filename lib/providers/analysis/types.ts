@@ -1,4 +1,4 @@
-export type AnalysisProviderId = "openai" | "gemini" | "anthropic" | "deepseek";
+export type AnalysisProviderId = "openai" | "gemini" | "anthropic" | "deepseek" | "fal-openrouter" | "openrouter";
 
 export type AnalysisProviderCapabilities = {
   supportsImages: boolean;

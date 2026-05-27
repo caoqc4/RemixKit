@@ -31,7 +31,7 @@ export type DashboardProvider = {
 export type DashboardProviderConfig = {
   id: string
   name: string
-  category: "analysis" | "video" | "storage" | "transcription"
+  category: "aggregator" | "official" | "analysis" | "video" | "storage" | "transcription"
   configured: boolean
   apiKeyPlaceholder?: string
   docsUrl?: string
@@ -99,10 +99,16 @@ export type DashboardPageProps = {
     id: string
     name: string
     provider?: string
+    providerId?: string
+    configured?: boolean
+    tags?: string[]
   }[]
   videoProviders: {
     id: string
     name: string
+    providerId?: string
+    configured?: boolean
+    tags?: string[]
     status?: "ready" | "beta" | "new"
   }[]
 }
@@ -136,8 +142,12 @@ export function RemixDashboard({
     url?: string
   }>({ type: null })
   const [brief, setBrief] = useState("")
-  const [analysisModel, setAnalysisModel] = useState(analysisModels[0]?.id ?? "auto")
-  const [videoProvider, setVideoProvider] = useState(videoProviders[0]?.id ?? "auto")
+  const [analysisModel, setAnalysisModel] = useState(
+    analysisModels.find((model) => model.configured)?.id ?? analysisModels[0]?.id ?? "auto"
+  )
+  const [videoProvider, setVideoProvider] = useState(
+    videoProviders.find((provider) => provider.configured)?.id ?? videoProviders[0]?.id ?? "auto"
+  )
   const [isRunning, setIsRunning] = useState(false)
   const [pipelineStages, setPipelineStages] = useState<PipelineStage[]>(defaultStages)
   const [selectedJob] = useState<string | null>(jobDetail?.id ?? recentJobs[0]?.id ?? null)
@@ -148,7 +158,13 @@ export function RemixDashboard({
     video: providers.some((p) => p.type === "video" && p.configured),
   }
 
-  const canStart = source.type !== null && brief.trim().length > 0 && providerStatus.analysis && providerStatus.video
+  const selectedAnalysisModel = analysisModels.find((model) => model.id === analysisModel)
+  const selectedVideoProvider = videoProviders.find((provider) => provider.id === videoProvider)
+  const canStart =
+    source.type !== null &&
+    brief.trim().length > 0 &&
+    Boolean(selectedAnalysisModel?.configured) &&
+    Boolean(selectedVideoProvider?.configured)
 
   const handleStartRemix = useCallback(async () => {
     if (!canStart) return
@@ -167,9 +183,11 @@ export function RemixDashboard({
       if (source.type === "url" && source.url) {
         formData.set("sourceUrl", source.url)
       }
+      const selectedAnalysis = analysisModels.find((model) => model.id === analysisModel)
+      const selectedVideo = videoProviders.find((provider) => provider.id === videoProvider)
       formData.set("goal", brief)
-      formData.set("analysisProvider", analysisModel)
-      formData.set("generationProvider", videoProvider)
+      formData.set("analysisProvider", selectedAnalysis?.providerId ?? analysisModel)
+      formData.set("generationProvider", selectedVideo?.providerId ?? videoProvider)
 
       const response = await fetch("/api/jobs", { method: "POST", body: formData })
 
@@ -194,7 +212,7 @@ export function RemixDashboard({
     } finally {
       setIsRunning(false)
     }
-  }, [analysisModel, brief, canStart, source, t.submitFailed, t.submitJob, videoProvider])
+  }, [analysisModel, analysisModels, brief, canStart, source, t.submitFailed, t.submitJob, videoProvider, videoProviders])
 
   const handleViewJob = useCallback((jobId: string) => {
     window.location.href = `/jobs/${jobId}`
@@ -454,6 +472,12 @@ export function RemixDashboard({
                     providers={providerConfigs}
                     onSaveKey={handleSaveKey}
                     language={language}
+                    analysisModels={analysisModels}
+                    videoProviders={videoProviders}
+                    analysisModel={analysisModel}
+                    videoProvider={videoProvider}
+                    onAnalysisModelChange={setAnalysisModel}
+                    onVideoProviderChange={setVideoProvider}
                   />
                 </div>
               </div>

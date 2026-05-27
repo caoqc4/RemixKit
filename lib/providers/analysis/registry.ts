@@ -64,6 +64,38 @@ export const analysisProviders: AnalysisProviderDefinition[] = [
       supportsStructuredOutput: true,
       supportsReasoning: true
     }
+  },
+  {
+    id: "fal-openrouter",
+    name: "fal / OpenRouter",
+    envKey: "FAL_KEY",
+    modelEnvKey: "FAL_OPENROUTER_ANALYSIS_MODEL",
+    description: "Quick-start analysis route through fal's OpenRouter-compatible endpoint.",
+    setupUrl: "https://fal.ai/dashboard/keys",
+    capabilityNotes: ["Uses FAL_KEY.", "Routes OpenRouter analysis models through fal."],
+    defaultModel: "google/gemini-2.5-flash",
+    capabilities: {
+      supportsImages: false,
+      supportsVideoFile: false,
+      supportsStructuredOutput: true,
+      supportsReasoning: true
+    }
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    envKey: "OPENROUTER_API_KEY",
+    modelEnvKey: "OPENROUTER_ANALYSIS_MODEL",
+    description: "Direct aggregator for analysis models such as Gemini, Claude, OpenAI, and DeepSeek.",
+    setupUrl: "https://openrouter.ai/settings/keys",
+    capabilityNotes: ["Uses OPENROUTER_API_KEY.", "Routes multiple LLM providers behind one key."],
+    defaultModel: "google/gemini-2.5-flash",
+    capabilities: {
+      supportsImages: false,
+      supportsVideoFile: false,
+      supportsStructuredOutput: true,
+      supportsReasoning: true
+    }
   }
 ];
 

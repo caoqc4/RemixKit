@@ -5,7 +5,7 @@ import type { RemixJob } from "@/lib/jobs/types";
 import type { AnalysisProviderId } from "@/lib/providers/analysis/types";
 import type { VideoProviderId } from "@/lib/providers/video/types";
 
-const analysisProviderIds = new Set(["auto", "openai", "gemini", "anthropic", "deepseek"]);
+const analysisProviderIds = new Set(["auto", "openai", "gemini", "anthropic", "deepseek", "fal-openrouter", "openrouter"]);
 const generationProviderIds = new Set(["auto", "luma", "runway", "veo", "fal", "replicate"]);
 
 export async function createLocalRemixJob(input: {

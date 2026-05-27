@@ -17,17 +17,109 @@ export async function getDashboardData(options: DashboardDataOptions = {}): Prom
       ? await readJob(summaries[0].id)
       : null;
 
-  const analysisModels = statuses.analysis.map((provider) => ({
-    id: provider.id,
-    name: provider.name,
-    provider: provider.name,
-  }));
+  const falStatus = statuses.generation.find((provider) => provider.id === "fal");
+  const falOpenRouterStatus = statuses.analysis.find((provider) => provider.id === "fal-openrouter");
+  const openRouterStatus = statuses.analysis.find((provider) => provider.id === "openrouter");
+  const replicateStatus = statuses.generation.find((provider) => provider.id === "replicate");
 
-  const videoProviders = statuses.generation.map((provider) => ({
-    id: provider.id,
-    name: provider.name,
-    status: provider.configured ? "ready" as const : provider.id === "veo" ? "new" as const : "beta" as const,
-  }));
+  const analysisModels = [
+    {
+      id: "fal-openrouter-gemini",
+      name: "Gemini 2.5 Flash",
+      provider: "via fal/OpenRouter",
+      providerId: "fal-openrouter",
+      configured: Boolean(falOpenRouterStatus?.configured),
+      tags: ["aggregator", "analysis"],
+    },
+    {
+      id: "fal-openrouter-claude",
+      name: "Claude Sonnet",
+      provider: "via fal/OpenRouter",
+      providerId: "fal-openrouter",
+      configured: Boolean(falOpenRouterStatus?.configured),
+      tags: ["aggregator", "analysis"],
+    },
+    {
+      id: "fal-openrouter-openai",
+      name: "OpenAI GPT",
+      provider: "via fal/OpenRouter",
+      providerId: "fal-openrouter",
+      configured: Boolean(falOpenRouterStatus?.configured),
+      tags: ["aggregator", "analysis"],
+    },
+    {
+      id: "fal-openrouter-deepseek",
+      name: "DeepSeek",
+      provider: "via fal/OpenRouter",
+      providerId: "fal-openrouter",
+      configured: Boolean(falOpenRouterStatus?.configured),
+      tags: ["aggregator", "analysis"],
+    },
+    {
+      id: "openrouter-gemini",
+      name: "Gemini 2.5 Flash",
+      provider: "via OpenRouter",
+      providerId: "openrouter",
+      configured: Boolean(openRouterStatus?.configured),
+      tags: ["aggregator", "analysis"],
+    },
+    ...statuses.analysis.filter((provider) => !["fal-openrouter", "openrouter"].includes(provider.id)).map((provider) => ({
+      id: provider.id,
+      name: provider.name,
+      provider: "official",
+      providerId: provider.id,
+      configured: provider.configured,
+      tags: ["official", provider.configured ? "ready" : "needs key"],
+    })),
+  ];
+
+  const videoProviders = [
+    {
+      id: "fal-seedance-2",
+      name: "Seedance 2",
+      provider: "via fal",
+      providerId: "fal",
+      configured: Boolean(falStatus?.configured),
+      tags: ["aggregator", "video reference", "fast trial"],
+      status: "new" as const,
+    },
+    {
+      id: "fal-sora-2",
+      name: "Sora 2",
+      provider: "via fal",
+      providerId: "fal",
+      configured: Boolean(falStatus?.configured),
+      tags: ["aggregator", "experimental"],
+      status: "beta" as const,
+    },
+    {
+      id: "fal-kling",
+      name: "Kling",
+      provider: "via fal",
+      providerId: "fal",
+      configured: Boolean(falStatus?.configured),
+      tags: ["aggregator", "image-to-video"],
+      status: "beta" as const,
+    },
+    {
+      id: "replicate-seedance",
+      name: "Seedance",
+      provider: "via Replicate",
+      providerId: "replicate",
+      configured: Boolean(replicateStatus?.configured),
+      tags: ["aggregator", "prediction"],
+      status: "beta" as const,
+    },
+    ...statuses.generation.filter((provider) => !["fal", "replicate"].includes(provider.id)).map((provider) => ({
+      id: provider.id,
+      name: provider.name,
+      provider: "official",
+      providerId: provider.id,
+      configured: provider.configured,
+      tags: ["official", provider.configured ? "ready" : "needs key"],
+      status: provider.configured ? "ready" as const : provider.id === "veo" ? "new" as const : "beta" as const,
+    })),
+  ];
 
   return {
     initialNav: options.initialNav ?? "workbench",
@@ -52,11 +144,7 @@ export async function getDashboardData(options: DashboardDataOptions = {}): Prom
         configured: provider.configured,
       })),
     ],
-    providerConfigs: [
-      ...statuses.analysis.map((provider) => providerToConfig(provider, "analysis" as const)),
-      ...statuses.generation.map((provider) => providerToConfig(provider, "video" as const)),
-      ...statuses.transcription.map((provider) => providerToConfig(provider, "transcription" as const)),
-    ],
+    providerConfigs: buildProviderConfigs(statuses),
     recentJobs: summaries.map(summaryToRecentJob),
     artifacts: selectedJob ? jobToArtifacts(selectedJob) : [],
     jobDetail: selectedJob ? jobToDetail(selectedJob) : undefined,
@@ -68,11 +156,58 @@ export async function getDashboardData(options: DashboardDataOptions = {}): Prom
   };
 }
 
-type ProviderStatus = Awaited<ReturnType<typeof getProviderStatuses>>["analysis"][number];
+type ProviderStatuses = Awaited<ReturnType<typeof getProviderStatuses>>;
+type ProviderStatus = ProviderStatuses["analysis"][number];
+
+function buildProviderConfigs(statuses: ProviderStatuses): DashboardPageProps["providerConfigs"] {
+  const fal = statuses.generation.find((provider) => provider.id === "fal");
+  const replicate = statuses.generation.find((provider) => provider.id === "replicate");
+  const openRouter = statuses.analysis.find((provider) => provider.id === "openrouter");
+
+  return [
+    fal
+      ? providerToConfig(
+          {
+            ...fal,
+            name: "fal",
+            description: "Quick-start aggregator for OpenRouter analysis models and video models such as Seedance 2 and Sora 2.",
+          },
+          "aggregator"
+        )
+      : null,
+    openRouter ? providerToConfig(openRouter, "aggregator") : null,
+    replicate
+      ? providerToConfig(
+          {
+            ...replicate,
+            name: "Replicate",
+            description: "Aggregator for selected video, image, and prediction-based generation models.",
+          },
+          "aggregator"
+        )
+      : null,
+    ...statuses.analysis
+      .filter((provider) => !["fal-openrouter", "openrouter"].includes(provider.id))
+      .map((provider) => providerToConfig(provider, "official")),
+    ...statuses.generation
+      .filter((provider) => provider.id !== "fal" && provider.id !== "replicate")
+      .map((provider) => providerToConfig(provider, "official")),
+    ...statuses.transcription.map((provider) => providerToConfig(provider, "official")),
+  ].filter((provider): provider is DashboardPageProps["providerConfigs"][number] => Boolean(provider))
+    .filter(uniqueByEnvKey);
+}
+
+function uniqueByEnvKey(
+  provider: DashboardPageProps["providerConfigs"][number],
+  index: number,
+  providers: DashboardPageProps["providerConfigs"]
+) {
+  return providers.findIndex((candidate) => candidate.apiKeyPlaceholder === provider.apiKeyPlaceholder) === index;
+}
 
 function providerToConfig(
   provider: ProviderStatus,
-  category: "analysis" | "video" | "transcription"
+  category: DashboardPageProps["providerConfigs"][number]["category"]
 ): DashboardPageProps["providerConfigs"][number] {
   return {
     id: `${category}-${provider.id}`,

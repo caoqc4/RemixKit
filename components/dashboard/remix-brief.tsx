@@ -29,10 +29,16 @@ interface RemixBriefProps {
     id: string
     name: string
     provider?: string
+    providerId?: string
+    configured?: boolean
+    tags?: string[]
   }[]
   videoProviders?: {
     id: string
     name: string
+    providerId?: string
+    configured?: boolean
+    tags?: string[]
     status?: "ready" | "beta" | "new"
   }[]
   language: DashboardLanguage
