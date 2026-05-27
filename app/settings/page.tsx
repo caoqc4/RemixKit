@@ -16,15 +16,15 @@ export default async function SettingsPage() {
       <div className="settings-layout">
         <div className="page-head">
           <div className="stack">
-            <p className="eyebrow">{hostedMode ? "Hosted credentials" : "Local credentials"}</p>
-            <h1>Model stack control room.</h1>
+            <p className="eyebrow">{hostedMode ? "云端凭证" : "本地凭证"}</p>
+            <h1>服务商配置</h1>
             <p className="subtle">
-              Environment keys come first. Local key saving stays available only for developer runs.
+              按分析模型、视频生成和转写服务分组管理 API Key。第一版本地 demo 使用你自己的 provider key。
             </p>
           </div>
           <span className="badge">
             <ShieldAlert size={14} />
-            {hostedMode ? "Environment keys" : "Local plaintext"}
+            {hostedMode ? "环境变量" : "本地保存"}
           </span>
         </div>
 
@@ -35,19 +35,19 @@ export default async function SettingsPage() {
         </section>
 
         <div className="settings-grid">
-          <ProviderSection title="Analysis providers" providers={statuses.analysis} />
-          <ProviderSection title="Video generation providers" providers={statuses.generation} />
-          <ProviderSection title="Transcription providers" providers={statuses.transcription} />
+          <ProviderSection title="分析模型" providers={statuses.analysis} />
+          <ProviderSection title="视频生成" providers={statuses.generation} />
+          <ProviderSection title="转写服务" providers={statuses.transcription} />
         </div>
 
         {hostedMode ? (
           <section className="credential-panel">
             <div>
               <p className="eyebrow">Vercel env</p>
-              <h2>Hosted key map</h2>
+              <h2>云端 Key 映射</h2>
             </div>
             <p className="subtle">
-              This deployment reads provider keys from Vercel environment variables. Local plaintext key saving is disabled in hosted storage mode.
+              当前部署从 Vercel 环境变量读取服务商 Key。云端存储模式下不会启用本地明文保存。
             </p>
             <pre className="mono env-block">{`REMIXKIT_STORAGE=vercel-blob
 BLOB_READ_WRITE_TOKEN=...
@@ -62,11 +62,11 @@ RUNWAY_API_KEY=...`}</pre>
           <section className="credential-panel">
             <div>
               <p className="eyebrow">Local config</p>
-              <h2>Save developer keys</h2>
+              <h2>保存开发者 Key</h2>
             </div>
             <form action={saveProviderSettings} className="stack">
             <p className="subtle">
-              Paste only the keys you want to add or update. Existing saved keys are preserved when a field is left blank.
+              只填写需要新增或更新的 Key。留空的字段会保留已有配置。
             </p>
             <div className="provider-grid">
               {uniqueProvidersByEnvKey([...statuses.analysis, ...statuses.transcription, ...statuses.generation]).map((provider) => (
@@ -84,13 +84,13 @@ RUNWAY_API_KEY=...`}</pre>
             </div>
             <button className="button" type="submit">
               <KeyRound size={16} />
-              Save to local config
+              保存到本地配置
             </button>
             <div className="provider-card">
               <div className="stack">
                 <span className="badge">
                   <KeyRound size={14} />
-                  .env.local also works
+                  也支持 .env.local
                 </span>
                 <pre className="mono">{`OPENAI_API_KEY=...
 GEMINI_API_KEY=...
@@ -150,7 +150,7 @@ function ProviderCard({ provider }: { provider: ProviderStatus }) {
       <div className="stack">
         <span className={provider.configured ? "badge ok" : "badge"}>
           {provider.configured ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-          {provider.configured ? "Configured" : "Missing key"}
+          {provider.configured ? "已配置" : "缺少 Key"}
         </span>
         <div>
           <h3>{provider.name}</h3>
@@ -165,7 +165,7 @@ function ProviderCard({ provider }: { provider: ProviderStatus }) {
           ))}
         </div>
         <a className="button secondary" href={provider.setupUrl} rel="noreferrer" target="_blank">
-          Open official setup
+          打开官方配置
           <ExternalLink size={15} />
         </a>
       </div>

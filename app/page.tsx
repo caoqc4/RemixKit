@@ -1,290 +1,226 @@
 import {
-  ArrowRight,
+  AlertTriangle,
   CheckCircle2,
   Circle,
-  ClipboardList,
   Cloud,
-  Film,
-  FolderOpen,
-  Gauge,
-  Layers3,
+  Download,
+  FileVideo,
   Link2,
   Play,
   RefreshCcw,
-  Settings2,
-  ShieldCheck,
-  Sparkles,
-  UploadCloud,
+  Search,
+  Upload,
   Wand2
 } from "lucide-react";
-import type { ReactNode } from "react";
 import { AppShell } from "./shell";
 import { getProviderStatuses } from "@/lib/config/provider-status";
 import { getStorageMode, listJobs } from "@/lib/jobs/storage";
 
 export const dynamic = "force-dynamic";
 
-const pipelineStages = [
-  { name: "Intake", state: "ready", detail: "File or public URL" },
-  { name: "Evidence", state: "queued", detail: "Frames, audio, transcript" },
-  { name: "Creative read", state: "queued", detail: "Hook, rhythm, CTA, risks" },
-  { name: "Variant plan", state: "queued", detail: "Fresh remix brief" },
-  { name: "Generation", state: "blocked", detail: "Needs video provider" },
-  { name: "Output", state: "idle", detail: "Variants and exports" }
-];
-
-const artifacts = ["Frame contact sheet", "Transcript", "Creative read", "Variant plan"];
-const evidenceMetrics = [
-  { label: "Shot map", value: "0" },
-  { label: "Hook window", value: "0s" },
-  { label: "Risk flags", value: "Ready" }
-];
+const workflow = ["素材导入", "证据提取", "创意解读", "变体规划", "视频生成", "输出交付"];
+const demoVariants = ["变体_A_活力版", "变体_B_沉稳版", "变体_C_极简版"];
 
 export default async function HomePage() {
   const statuses = await getProviderStatuses();
   const jobs = await listJobs();
-  const configuredAnalysis = statuses.analysis.filter((provider) => provider.configured);
-  const configuredTranscription = statuses.transcription.filter((provider) => provider.configured);
-  const configuredGeneration = statuses.generation.filter((provider) => provider.configured);
   const storageMode = getStorageMode();
   const hostedMode = storageMode === "vercel-blob";
-  const lastJob = jobs[0];
-  const providerReady = configuredAnalysis.length > 0 && configuredGeneration.length > 0;
+  const readyCount = [...statuses.analysis, ...statuses.generation, ...statuses.transcription].filter((provider) => provider.configured).length;
+  const totalCount = statuses.analysis.length + statuses.generation.length + statuses.transcription.length;
+  const ready = statuses.analysis.some((provider) => provider.configured) && statuses.generation.some((provider) => provider.configured);
+  const latest = jobs[0];
 
   return (
     <AppShell>
-      <div className="screen workbench-screen">
-        <header className="ops-header">
-          <div className="ops-title">
-            <p className="kicker">RemixKit Workbench</p>
-            <h1>Reference creative to original ad variants.</h1>
-            <p className="subtle">
-              Upload owned source material, extract evidence, ask a reasoning model for the creative read, then generate fresh testable variants.
-            </p>
+      <div className="v0-page">
+        <header className="v0-topbar">
+          <div>
+            <h1>工作台</h1>
+            <p>AI 视频广告混剪工作流</p>
           </div>
-          <div className="ops-metrics" aria-label="Workbench status">
-            <StatusTile icon={<Cloud size={16} />} label="Storage" value={hostedMode ? "Vercel Blob" : "Local"} />
-            <StatusTile icon={<Gauge size={16} />} label="Providers" value={`${configuredAnalysis.length + configuredGeneration.length}/${statuses.analysis.length + statuses.generation.length}`} />
-            <StatusTile icon={<RefreshCcw size={16} />} label="Recent run" value={lastJob ? lastJob.status : "None"} />
+          <div className="topbar-actions">
+            <span className="select-pill">
+              <Cloud size={14} />
+              {hostedMode ? "云端存储" : "本地存储"}
+            </span>
+            <span className={ready ? "status-badge ready" : "status-badge"}>
+              <CheckCircle2 size={14} />
+              {ready ? "服务就绪" : `${readyCount}/${totalCount} 服务商`}
+            </span>
           </div>
         </header>
 
-        <form action="/api/jobs" className="workbench-grid" encType="multipart/form-data" method="post">
-          <section className="source-console" aria-labelledby="source-title">
-            <div className="panel-head">
-              <div>
-                <p className="eyebrow">01 Source intake</p>
-                <h2 id="source-title">Reference creative</h2>
+        <form action="/api/jobs" className="v0-workbench" encType="multipart/form-data" method="post">
+          <section className="v0-stack">
+            <div className="v0-card">
+              <div className="card-head">
+                <h2>素材来源</h2>
+                <div className="segmented">
+                  <button type="button" aria-pressed="true">
+                    <Upload size={14} />
+                    上传
+                  </button>
+                  <button type="button">
+                    <Link2 size={14} />
+                    链接
+                  </button>
+                </div>
               </div>
-              <span className="badge">
-                <ShieldCheck size={14} />
-                User-owned
-              </span>
-            </div>
 
-            <label className="upload-console" htmlFor="video">
-              <input id="video" name="video" type="file" accept="video/*" />
-              <span className="upload-preview">
-                <Film size={30} />
-                <span />
-              </span>
-              <span className="upload-copy">
-                <strong>Drop or select a reference video</strong>
-                <small>MP4, MOV, or browser-supported video. The source is analyzed for structure, not copied as-is.</small>
-              </span>
-              <UploadCloud size={20} />
-            </label>
+              <label className="drop-zone" htmlFor="video">
+                <input id="video" name="video" type="file" accept="video/*" />
+                <Upload size={28} />
+                <strong>拖放视频文件或点击上传</strong>
+                <span>支持 MP4、MOV、WebM 格式</span>
+              </label>
 
-            <label className="url-field workbench-url" htmlFor="sourceUrl">
-              <Link2 size={17} />
-              <span>Public video URL</span>
-              <input id="sourceUrl" name="sourceUrl" placeholder="https://example.com/owned-reference.mp4" type="url" />
-            </label>
+              <label className="dark-field" htmlFor="sourceUrl">
+                <span>公开视频链接</span>
+                <input id="sourceUrl" name="sourceUrl" placeholder="https://example.com/owned-video.mp4" type="url" />
+              </label>
 
-            <div className="notice-row">
-              <ShieldCheck size={16} />
-              <span>Use material you have permission to remix. RemixKit generates new variants from observed marketing structure.</span>
-            </div>
-          </section>
-
-          <section className="brief-console" aria-labelledby="brief-title">
-            <div className="panel-head">
-              <div>
-                <p className="eyebrow">02 Remix brief</p>
-                <h2 id="brief-title">Creative direction</h2>
+              <div className="warning-note">
+                <AlertTriangle size={15} />
+                <span>请仅使用您拥有版权或已获授权的素材。生成的变体仅用于参考学习，商用需确保合规。</span>
               </div>
-              <span className={providerReady ? "badge ok" : "badge"}>{providerReady ? "Ready" : "Configure providers"}</span>
             </div>
 
-            <label className="brief-field" htmlFor="goal">
-              <span>Goal for this run</span>
-              <textarea
-                id="goal"
-                name="goal"
-                placeholder="Generate 3 TikTok ad variants for a skincare product. Keep the winning hook structure, change the creator framing, visuals, and CTA."
-              />
-            </label>
-
-            <div className="selector-row" role="group" aria-label="Provider selection">
-              <label htmlFor="analysisProvider">
-                <span>Analysis model</span>
-                <select id="analysisProvider" name="analysisProvider" defaultValue="auto">
-                  <option value="auto">Auto select</option>
-                  {statuses.analysis.map((provider) => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </option>
-                  ))}
-                </select>
+            <div className="v0-card">
+              <h2>创意目标</h2>
+              <label className="dark-field" htmlFor="goal">
+                <span>目标说明</span>
+                <textarea
+                  id="goal"
+                  name="goal"
+                  placeholder="描述您想要的变体风格，例如：保持原视频的节奏和叙事结构，但使用更明亮的色调和更年轻化的视觉元素，适合抖音投放..."
+                />
               </label>
-              <label htmlFor="generationProvider">
-                <span>Video provider</span>
-                <select id="generationProvider" name="generationProvider" defaultValue="auto">
-                  <option value="auto">Auto select</option>
-                  {statuses.generation.map((provider) => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+              <p className="hint">AI 将分析原视频并根据您的目标生成创意变体</p>
 
-            <div className="launch-strip">
-              <button className="button launch-button" type="submit">
-                <Play size={17} />
-                Start remix run
+              <div className="provider-selects">
+                <label className="dark-field" htmlFor="analysisProvider">
+                  <span>分析模型</span>
+                  <select id="analysisProvider" name="analysisProvider" defaultValue="auto">
+                    <option value="auto">自动选择</option>
+                    {statuses.analysis.map((provider) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="dark-field" htmlFor="generationProvider">
+                  <span>视频生成</span>
+                  <select id="generationProvider" name="generationProvider" defaultValue="auto">
+                    <option value="auto">自动选择</option>
+                    {statuses.generation.map((provider) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button className="button primary full" type="submit">
+                <Play size={15} />
+                开始混剪
               </button>
-              <a className="button ghost" href="/settings">
-                <Settings2 size={16} />
-                Provider settings
-              </a>
             </div>
-          </section>
 
-          <aside className="inspection-rail" aria-label="Run inspection">
-            <section className="rail-section">
-              <div className="rail-head">
-                <p className="eyebrow">Readiness</p>
-                <Sparkles size={17} />
-              </div>
-              <ReadinessRow label="Analysis" value={configuredAnalysis.length} total={statuses.analysis.length} />
-              <ReadinessRow label="Generation" value={configuredGeneration.length} total={statuses.generation.length} />
-              <ReadinessRow label="Transcript" value={configuredTranscription.length} total={statuses.transcription.length} />
-            </section>
-
-            <section className="rail-section">
-              <div className="rail-head">
-                <p className="eyebrow">Artifacts</p>
-                <FolderOpen size={17} />
-              </div>
-              <div className="artifact-list">
-                {artifacts.map((artifact) => (
-                  <span key={artifact}>
-                    <Circle size={11} />
-                    {artifact}
-                  </span>
+            <div className="v0-card">
+              <h2>工作流程</h2>
+              <div className="workflow-list">
+                {workflow.map((stage, index) => (
+                  <div className="workflow-row" key={stage}>
+                    <span>{index + 1}</span>
+                    <strong>{stage}</strong>
+                    <Circle size={13} />
+                  </div>
                 ))}
               </div>
+            </div>
+          </section>
+
+          <aside className="v0-rail">
+            <section className="v0-card rail-card">
+              <h2>服务状态</h2>
+              <RailItem label="分析模型" value={`${statuses.analysis.filter((p) => p.configured).length}/${statuses.analysis.length}`} />
+              <RailItem label="视频生成" value={`${statuses.generation.filter((p) => p.configured).length}/${statuses.generation.length}`} />
+              <RailItem label="转写服务" value={`${statuses.transcription.filter((p) => p.configured).length}/${statuses.transcription.length}`} />
             </section>
 
-            <section className="rail-section">
-              <div className="rail-head">
-                <p className="eyebrow">Recent jobs</p>
-                <ClipboardList size={17} />
-              </div>
+            <section className="v0-card rail-card">
+              <h2>生成产物</h2>
+              {["镜头证据", "转写文本", "创意解读", "变体方案"].map((artifact) => (
+                <RailItem key={artifact} label={artifact} value="等待生成" />
+              ))}
+            </section>
+
+            <section className="v0-card rail-card">
+              <h2>最近任务</h2>
               {jobs.length ? (
-                <div className="run-list">
-                  {jobs.slice(0, 4).map((job) => (
-                    <a className="run-row" href={`/jobs/${job.id}`} key={job.id}>
-                      <span>{job.status}</span>
-                      <strong>{job.sourceFileName}</strong>
-                      <small>{new Date(job.createdAt).toLocaleString()}</small>
-                    </a>
-                  ))}
-                </div>
+                jobs.slice(0, 4).map((job) => (
+                  <a className="job-mini" href={`/jobs/${job.id}`} key={job.id}>
+                    <span>{job.status}</span>
+                    <strong>{job.sourceFileName}</strong>
+                    <small>{new Date(job.createdAt).toLocaleString()}</small>
+                  </a>
+                ))
               ) : (
-                <div className="empty-panel">
-                  <ClipboardList size={18} />
-                  No remix runs yet.
-                </div>
+                <p className="hint">暂无任务</p>
               )}
             </section>
           </aside>
         </form>
 
-        <section className="pipeline-board" aria-label="Pipeline board">
-          <div className="board-head">
+        <section className="v0-card job-showcase">
+          <div className="job-title-row">
             <div>
-              <p className="eyebrow">Pipeline</p>
-              <h2>From source evidence to generated variants</h2>
+              <h2>{latest?.sourceFileName ?? "夏季促销广告"}</h2>
+              <p>{latest ? `${latest.status} · ${new Date(latest.createdAt).toLocaleString()}` : "完成 · 2024-01-15 14:30 · summer_promo_original.mp4"}</p>
             </div>
-            <div className="board-actions">
-              <button className="button secondary" type="button">
-                <Wand2 size={16} />
-                Analyze
+            <div className="job-actions">
+              <button className="button ghost" type="button">
+                <Search size={15} />
+                分析
               </button>
-              <button className="button secondary" type="button">
-                <Play size={16} />
-                Generate
+              <button className="button ghost" type="button">
+                <Wand2 size={15} />
+                生成
               </button>
-              <button className="button secondary" type="button">
-                <RefreshCcw size={16} />
-                Refresh
+              <button className="button ghost" type="button">
+                <RefreshCcw size={15} />
+                刷新
               </button>
             </div>
           </div>
-          <div className="pipeline-grid">
-            {pipelineStages.map((stage, index) => (
-              <div className={`pipeline-card ${stage.state}`} key={stage.name}>
-                <span className="pipeline-index">{String(index + 1).padStart(2, "0")}</span>
-                <strong>{stage.name}</strong>
-                <small>{stage.detail}</small>
+
+          <div className="warning-note">
+            <AlertTriangle size={15} />
+            <span>建议：原视频包含人脸，生成变体可能需要额外的肖像权授权。</span>
+          </div>
+
+          <div className="metric-grid">
+            <Metric label="生成变体" value="3" />
+            <Metric label="处理时长" value="4m 32s" />
+            <Metric label="视觉匹配度" value="92%" delta="+5%" />
+            <Metric label="API 成本" value="$2.40" />
+          </div>
+
+          <h3>生成视频 (3)</h3>
+          <div className="video-grid">
+            {demoVariants.map((variant) => (
+              <div className="video-tile" key={variant}>
+                <span>0:15</span>
+                <FileVideo size={20} />
+                <strong>{variant}</strong>
+                <button className="icon-button" type="button" aria-label={`下载 ${variant}`}>
+                  <Download size={14} />
+                </button>
               </div>
             ))}
-          </div>
-        </section>
-
-        <section className="detail-grid" aria-label="Job detail pattern">
-          <div className="detail-panel">
-            <div className="panel-head">
-              <div>
-                <p className="eyebrow">Evidence metrics</p>
-                <h2>Analysis frame</h2>
-              </div>
-              <Layers3 size={18} />
-            </div>
-            <div className="metric-row">
-              {evidenceMetrics.map((metric) => (
-                <div className="metric-tile" key={metric.label}>
-                  <strong>{metric.value}</strong>
-                  <span>{metric.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="warning-strip">
-              <ShieldCheck size={16} />
-              <span>Similarity warnings and policy guardrails belong here before generation starts.</span>
-            </div>
-          </div>
-
-          <div className="detail-panel output-panel">
-            <div className="panel-head">
-              <div>
-                <p className="eyebrow">Generated videos</p>
-                <h2>Variant output slots</h2>
-              </div>
-              <ArrowRight size={18} />
-            </div>
-            <div className="variant-slots">
-              {["Hook test", "Angle test", "CTA test"].map((variant) => (
-                <div className="variant-slot" key={variant}>
-                  <span />
-                  <strong>{variant}</strong>
-                  <small>Awaiting generation</small>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
       </div>
@@ -292,27 +228,23 @@ export default async function HomePage() {
   );
 }
 
-function StatusTile({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+function RailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="status-tile">
-      {icon}
+    <div className="rail-item">
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
   );
 }
 
-function ReadinessRow({ label, value, total }: { label: string; value: number; total: number }) {
-  const ready = value > 0;
-
+function Metric({ label, value, delta }: { label: string; value: string; delta?: string }) {
   return (
-    <div className="readiness-row">
-      <span className={ready ? "ready-dot ready" : "ready-dot"}>{ready ? <CheckCircle2 size={15} /> : <Circle size={15} />}</span>
-      <strong>{label}</strong>
-      <small>
-        {value}/{total} configured
-      </small>
-      <ArrowRight size={14} />
+    <div className="metric-tile">
+      <strong>
+        {value}
+        {delta ? <span>{delta}</span> : null}
+      </strong>
+      <small>{label}</small>
     </div>
   );
 }

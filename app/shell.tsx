@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clapperboard, Home, Layers3, Settings, SlidersHorizontal } from "lucide-react";
+import { BriefcaseBusiness, Clapperboard, Home, Menu, Settings, SlidersHorizontal } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Workbench", icon: Home },
-  { href: "/", label: "Jobs", icon: Layers3 },
-  { href: "/settings", label: "Providers", icon: SlidersHorizontal },
-  { href: "/settings", label: "Settings", icon: Settings }
+  { href: "/", label: "工作台", icon: Home },
+  { href: "/jobs", label: "任务队列", icon: BriefcaseBusiness },
+  { href: "/settings", label: "服务商", icon: SlidersHorizontal },
+  { href: "/settings", label: "设置", icon: Settings }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -17,31 +17,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Link className="brand" href="/">
-          <span className="brand-mark">
-            <Clapperboard size={19} />
-          </span>
-          <span>
-            RemixKit
-            <small>Creative Ops</small>
-          </span>
-        </Link>
+        <div className="sidebar-top">
+          <Link className="brand" href="/">
+            <span className="brand-mark">
+              <Clapperboard size={17} />
+            </span>
+            <span>RemixKit</span>
+          </Link>
+          <button className="icon-button" type="button" aria-label="Collapse sidebar">
+            <Menu size={16} />
+          </button>
+        </div>
         <nav className="nav" aria-label="Primary">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
-            const active = index === 0 ? pathname === "/" : pathname === item.href && item.label !== "Settings";
+            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href) && item.label !== "设置";
             return (
               <Link key={`${item.href}-${item.label}`} href={item.href} aria-current={active ? "page" : undefined}>
-                <Icon size={18} />
-                {item.label}
+                <Icon size={16} />
+                <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="sidebar-status">
-          <span>Local demo</span>
-          <strong>Bring your own keys</strong>
-        </div>
       </aside>
       <main className="main">{children}</main>
     </div>

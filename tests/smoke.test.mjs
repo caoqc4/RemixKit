@@ -61,11 +61,12 @@ async function main() {
   assertContains("lib/jobs/create.ts", "createRemoteRemixJob");
   assertContains("app/api/jobs/route.ts", "sourceUrl");
   assertContains("lib/providers/video/runway.ts", "sourceVideoUrl");
-  assertContains("app/page.tsx", "RemixKit Workbench");
-  assertContains("app/page.tsx", "Reference creative to original ad variants.");
-  assertContains("app/page.tsx", "Pipeline");
-  assertContains("app/page.tsx", "Generated videos");
-  assertContains("app/settings/page.tsx", "Model stack control room.");
+  assertContains("app/page.tsx", "工作台");
+  assertContains("app/page.tsx", "AI 视频广告混剪工作流");
+  assertContains("app/page.tsx", "工作流程");
+  assertContains("app/page.tsx", "生成视频");
+  assertContains("app/jobs/page.tsx", "任务队列");
+  assertContains("app/settings/page.tsx", "服务商配置");
   assertContains("app/jobs/[id]/page.tsx", "action-deck");
 
   assertContains("README.md", "Analysis providers are peers");
