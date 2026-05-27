@@ -66,6 +66,7 @@ async function main() {
   assertContains("README.md", "Deploy From GitHub to Vercel");
   assertContains("README.md", "Transcription is a separate evidence-extraction step");
   assertContains("docs/architecture.md", "OpenAI is only first in auto-selection order");
+  assertContains("docs/architecture.md", "per-user secret vault");
   assertContains("docs/mvp-roadmap.md", "Vercel Blob job storage");
 
   const appApiFiles = await readdir(path.join(root, "app/api/jobs/[id]"));

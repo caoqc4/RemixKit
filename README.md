@@ -77,7 +77,7 @@ LUMA_VIDEO_MODEL=ray-flash-2
 
 The Settings page can save keys into `.remixkit/config.json`. This file is plaintext local config and is ignored by git.
 
-For hosted deployments, configure keys as environment variables in the hosting platform. The settings page is useful for seeing what is missing, but local plaintext config is not persistent on serverless platforms.
+For hosted deployments, configure keys as environment variables in the hosting platform. The settings page is useful for seeing what is missing; local plaintext key saving is disabled in hosted storage mode because serverless filesystems are not durable.
 
 The Settings page also links to each provider's official setup page. Direct official-account login is not implemented in the local MVP; it can be added later for providers that expose a stable OAuth or device-code flow.
 

@@ -119,7 +119,7 @@ The Settings UI links to official provider setup pages so users can sign in with
 - Hosted mode skips ffmpeg/ffprobe extraction; rich media extraction still requires local mode or a future worker.
 - No background queue; long-running operations happen inside request handlers.
 - No automated test suite yet.
-- No account system, billing, or hosted storage.
+- No account system, billing, or per-user secret vault.
 
 ## Design Constraint
 

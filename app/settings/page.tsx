@@ -58,46 +58,73 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="section stack settings-section">
-        <h2>Save local keys</h2>
-        <form action={saveProviderSettings} className="panel panel-pad stack">
-          <p className="subtle">
-            Paste only the keys you want to add or update. Existing saved keys are preserved when a field is left blank. On Vercel, configure these as project environment variables instead of relying on saved local config.
-          </p>
-          <div className="provider-grid">
-            {uniqueProvidersByEnvKey([...statuses.analysis, ...statuses.transcription, ...statuses.generation]).map((provider) => (
-              <div className="field" key={provider.envKey}>
-                <label htmlFor={provider.envKey}>{provider.name}</label>
-                <input
-                  className="input"
-                  id={provider.envKey}
-                  name={provider.envKey}
-                  placeholder={provider.envKey}
-                  type="password"
-                />
-              </div>
-            ))}
-          </div>
-          <button className="button" type="submit">
-            <KeyRound size={16} />
-            Save to local config
-          </button>
-          <div className="provider-card">
-            <div className="stack">
-              <span className="badge">
-                <KeyRound size={14} />
-                .env.local also works
-              </span>
-              <pre className="mono">{`OPENAI_API_KEY=...
+      {hostedMode ? (
+        <section className="section stack settings-section">
+          <h2>Hosted environment keys</h2>
+          <div className="panel panel-pad stack">
+            <p className="subtle">
+              This deployment reads provider keys from Vercel environment variables. Local plaintext key saving is disabled in hosted storage mode because serverless filesystems are not durable.
+            </p>
+            <div className="provider-card">
+              <div className="stack">
+                <span className="badge">
+                  <KeyRound size={14} />
+                  Required in Vercel
+                </span>
+                <pre className="mono">{`REMIXKIT_STORAGE=vercel-blob
+BLOB_READ_WRITE_TOKEN=...
+OPENAI_API_KEY=...
 GEMINI_API_KEY=...
 ANTHROPIC_API_KEY=...
 DEEPSEEK_API_KEY=...
 LUMA_API_KEY=...
 RUNWAY_API_KEY=...`}</pre>
+              </div>
             </div>
           </div>
-        </form>
-      </section>
+        </section>
+      ) : (
+        <section className="section stack settings-section">
+          <h2>Save local keys</h2>
+          <form action={saveProviderSettings} className="panel panel-pad stack">
+            <p className="subtle">
+              Paste only the keys you want to add or update. Existing saved keys are preserved when a field is left blank.
+            </p>
+            <div className="provider-grid">
+              {uniqueProvidersByEnvKey([...statuses.analysis, ...statuses.transcription, ...statuses.generation]).map((provider) => (
+                <div className="field" key={provider.envKey}>
+                  <label htmlFor={provider.envKey}>{provider.name}</label>
+                  <input
+                    className="input"
+                    id={provider.envKey}
+                    name={provider.envKey}
+                    placeholder={provider.envKey}
+                    type="password"
+                  />
+                </div>
+              ))}
+            </div>
+            <button className="button" type="submit">
+              <KeyRound size={16} />
+              Save to local config
+            </button>
+            <div className="provider-card">
+              <div className="stack">
+                <span className="badge">
+                  <KeyRound size={14} />
+                  .env.local also works
+                </span>
+                <pre className="mono">{`OPENAI_API_KEY=...
+GEMINI_API_KEY=...
+ANTHROPIC_API_KEY=...
+DEEPSEEK_API_KEY=...
+LUMA_API_KEY=...
+RUNWAY_API_KEY=...`}</pre>
+              </div>
+            </div>
+          </form>
+        </section>
+      )}
     </AppShell>
   );
 }
