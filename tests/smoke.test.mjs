@@ -61,7 +61,8 @@ async function main() {
   assertContains("lib/jobs/create.ts", "createRemoteRemixJob");
   assertContains("app/api/jobs/route.ts", "sourceUrl");
   assertContains("lib/providers/video/runway.ts", "sourceVideoUrl");
-  assertContains("app/page.tsx", "Reference in. Original ad variants out.");
+  assertContains("app/page.tsx", "Cinematic Operations Workbench");
+  assertContains("app/page.tsx", "Build video ad variants from a reference creative.");
   assertContains("app/settings/page.tsx", "Model stack control room.");
   assertContains("app/jobs/[id]/page.tsx", "action-deck");
 

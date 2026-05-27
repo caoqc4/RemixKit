@@ -1,17 +1,22 @@
-import { ArrowRight, CheckCircle2, Circle, ClipboardList, Film, Link2, Play, Sparkles, UploadCloud } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  ClipboardList,
+  Cloud,
+  Film,
+  Link2,
+  Play,
+  Settings2,
+  UploadCloud
+} from "lucide-react";
 import { AppShell } from "./shell";
 import { getProviderStatuses } from "@/lib/config/provider-status";
 import { getStorageMode, listJobs } from "@/lib/jobs/storage";
 
 export const dynamic = "force-dynamic";
 
-const pipeline = [
-  "Intake",
-  "Evidence",
-  "Creative read",
-  "Variant plan",
-  "Generation"
-];
+const stages = ["Source", "Evidence", "Read", "Plan", "Generate"];
 
 export default async function HomePage() {
   const statuses = await getProviderStatuses();
@@ -24,181 +29,170 @@ export default async function HomePage() {
 
   return (
     <AppShell>
-      <div className="workbench">
-        <header className="hero-bar">
-          <div className="hero-copy">
-            <p className="eyebrow">{hostedMode ? "Hosted remix workflow" : "Local remix workflow"}</p>
-            <h1>Reference in. Original ad variants out.</h1>
-            <p className="hero-subtitle">
-              Analyze a winning creative pattern, keep the structure, and generate fresh video ad directions without copying the source.
-            </p>
+      <div className="screen workbench-screen">
+        <header className="op-header">
+          <div>
+            <p className="kicker">Cinematic Operations Workbench</p>
+            <h1>Build video ad variants from a reference creative.</h1>
           </div>
-          <div className="hero-meter" aria-label="Workflow readiness">
-            <span className="meter-label">MVP</span>
-            <span className="meter-value">RemixKit</span>
-            <span className="meter-note">{hostedMode ? "Vercel Blob" : "Local storage"}</span>
+          <div className="header-actions">
+            <span className="status-pill">
+              <Cloud size={15} />
+              {hostedMode ? "Vercel Blob" : "Local storage"}
+            </span>
+            <a className="button ghost" href="/settings">
+              <Settings2 size={16} />
+              Providers
+            </a>
           </div>
         </header>
 
-        <section className="workflow-strip" aria-label="Workflow stages">
-          {pipeline.map((step, index) => (
-            <div className="workflow-step" key={step}>
-              <span className="step-index">{String(index + 1).padStart(2, "0")}</span>
-              <span>{step}</span>
+        <section className="stage-track" aria-label="Remix workflow">
+          {stages.map((stage, index) => (
+            <div className="stage" key={stage}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{stage}</strong>
             </div>
           ))}
         </section>
 
-        <div className="workbench-grid">
-          <section className="intake-panel">
-            <div className="panel-head">
+        <form action="/api/jobs" className="launch-grid" encType="multipart/form-data" method="post">
+          <section className="module source-module">
+            <div className="module-title">
+              <span className="module-index">01</span>
               <div>
-                <p className="eyebrow">New job</p>
-                <h2>Create remix run</h2>
+                <h2>Source creative</h2>
+                <p>Upload locally for extraction, or use a public URL for hosted runs.</p>
               </div>
-              <span className="badge ok">
-                <Sparkles size={14} />
-                Ready
-              </span>
             </div>
 
-            <form action="/api/jobs" className="intake-form" encType="multipart/form-data" method="post">
-              <label className="dropzone" htmlFor="video">
-                <span className="dropzone-icon">
-                  <UploadCloud size={24} />
-                </span>
-                <span>
-                  <strong>Upload reference video</strong>
-                  <span>Local mode extracts frames, audio, and transcript evidence.</span>
-                </span>
-                <input id="video" name="video" type="file" accept="video/*" />
-              </label>
+            <label className="media-intake" htmlFor="video">
+              <input id="video" name="video" type="file" accept="video/*" />
+              <span className="media-frame">
+                <Film size={34} />
+              </span>
+              <span>
+                <strong>Drop reference video</strong>
+                <small>MP4, MOV, or any browser-supported video file</small>
+              </span>
+              <UploadCloud size={20} />
+            </label>
 
-              <div className="field with-icon">
-                <Link2 size={17} />
-                <div>
-                  <label htmlFor="sourceUrl">Public video URL</label>
-                  <input
-                    id="sourceUrl"
-                    name="sourceUrl"
-                    placeholder="https://example.com/owned-reference.mp4"
-                    type="url"
-                  />
-                </div>
-              </div>
-
-              <div className="field">
-                <label htmlFor="goal">Creative goal</label>
-                <textarea
-                  id="goal"
-                  name="goal"
-                  placeholder="3 TikTok ad variants for a skincare product. Keep the hook direct, avoid copying the creator identity."
-                />
-              </div>
-
-              <div className="selector-row">
-                <div className="field">
-                  <label htmlFor="analysisProvider">Analysis model</label>
-                  <select id="analysisProvider" name="analysisProvider" defaultValue="auto">
-                    <option value="auto">Auto select</option>
-                    {statuses.analysis.map((provider) => (
-                      <option key={provider.id} value={provider.id}>
-                        {provider.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="generationProvider">Video provider</label>
-                  <select id="generationProvider" name="generationProvider" defaultValue="auto">
-                    <option value="auto">Auto select</option>
-                    {statuses.generation.map((provider) => (
-                      <option key={provider.id} value={provider.id}>
-                        {provider.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <button className="button primary-action" type="submit">
-                <Play size={17} />
-                Start remix run
-              </button>
-            </form>
+            <label className="url-field" htmlFor="sourceUrl">
+              <Link2 size={17} />
+              <span>Public video URL</span>
+              <input id="sourceUrl" name="sourceUrl" placeholder="https://example.com/owned-reference.mp4" type="url" />
+            </label>
           </section>
 
-          <aside className="side-rail">
-            <section className="readiness-card">
-              <div className="panel-head">
-                <h2>Provider stack</h2>
-                <a className="text-link" href="/settings">
-                  Configure <ArrowRight size={14} />
-                </a>
-              </div>
-              <div className="status-grid">
-                <ReadinessMetric label="Analysis" value={configuredAnalysis.length} total={statuses.analysis.length} />
-                <ReadinessMetric label="Generation" value={configuredGeneration.length} total={statuses.generation.length} />
-                <ReadinessMetric label="Transcript" value={configuredTranscription.length} total={statuses.transcription.length} />
-              </div>
-            </section>
-
-            <section className="artifact-card">
-              <div className="artifact-visual" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
+          <section className="module brief-module">
+            <div className="module-title">
+              <span className="module-index">02</span>
               <div>
-                <p className="eyebrow">Output</p>
-                <h2>Brief, prompts, tasks</h2>
+                <h2>Remix brief</h2>
+                <p>Tell the system what kind of variants you want to test.</p>
               </div>
-              <p className="subtle">
-                Jobs save a remix brief, structured analysis, provider prompts, and generation results in {hostedMode ? "Vercel Blob" : "local storage"}.
-              </p>
+            </div>
+
+            <label className="brief-field" htmlFor="goal">
+              <span>Creative goal</span>
+              <textarea
+                id="goal"
+                name="goal"
+                placeholder="Generate 3 TikTok ad variants for a skincare product. Keep the hook direct; avoid copying the creator identity."
+              />
+            </label>
+
+            <div className="select-grid">
+              <label htmlFor="analysisProvider">
+                <span>Analysis model</span>
+                <select id="analysisProvider" name="analysisProvider" defaultValue="auto">
+                  <option value="auto">Auto select</option>
+                  {statuses.analysis.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label htmlFor="generationProvider">
+                <span>Video provider</span>
+                <select id="generationProvider" name="generationProvider" defaultValue="auto">
+                  <option value="auto">Auto select</option>
+                  {statuses.generation.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <button className="button launch-button" type="submit">
+              <Play size={17} />
+              Start remix run
+            </button>
+          </section>
+
+          <aside className="ops-column">
+            <section className="module compact-module">
+              <div className="module-title">
+                <span className="module-index">03</span>
+                <div>
+                  <h2>Provider readiness</h2>
+                  <p>Configured API keys available to this run.</p>
+                </div>
+              </div>
+              <div className="readiness-list">
+                <ReadinessRow label="Analysis" value={configuredAnalysis.length} total={statuses.analysis.length} />
+                <ReadinessRow label="Generation" value={configuredGeneration.length} total={statuses.generation.length} />
+                <ReadinessRow label="Transcript" value={configuredTranscription.length} total={statuses.transcription.length} />
+              </div>
             </section>
 
-            <section className="recent-card">
-              <div className="panel-head">
-                <h2>Recent runs</h2>
-                <ClipboardList size={18} />
+            <section className="module compact-module">
+              <div className="module-title">
+                <span className="module-index">04</span>
+                <div>
+                  <h2>Recent runs</h2>
+                  <p>Pick up where the last creative test stopped.</p>
+                </div>
               </div>
               {jobs.length ? (
-                <div className="job-list">
+                <div className="run-list">
                   {jobs.slice(0, 5).map((job) => (
-                    <a className="job-row" href={`/jobs/${job.id}`} key={job.id}>
-                      <span className="job-status">{job.status}</span>
-                      <span>
-                        <strong>{job.sourceFileName}</strong>
-                        <small>{new Date(job.createdAt).toLocaleString()}</small>
-                      </span>
+                    <a className="run-row" href={`/jobs/${job.id}`} key={job.id}>
+                      <span>{job.status}</span>
+                      <strong>{job.sourceFileName}</strong>
+                      <small>{new Date(job.createdAt).toLocaleString()}</small>
                     </a>
                   ))}
                 </div>
               ) : (
-                <div className="empty-state">
-                  <Film size={20} />
-                  <span>No runs yet.</span>
+                <div className="empty-panel">
+                  <ClipboardList size={18} />
+                  No remix runs yet.
                 </div>
               )}
             </section>
           </aside>
-        </div>
+        </form>
       </div>
     </AppShell>
   );
 }
 
-function ReadinessMetric({ label, value, total }: { label: string; value: number; total: number }) {
+function ReadinessRow({ label, value, total }: { label: string; value: number; total: number }) {
   const ready = value > 0;
 
   return (
-    <div className={`metric ${ready ? "ready" : ""}`}>
-      <span>{ready ? <CheckCircle2 size={16} /> : <Circle size={16} />}</span>
-      <strong>
-        {value}/{total}
-      </strong>
-      <small>{label}</small>
+    <div className="readiness-row">
+      <span className={ready ? "ready-dot ready" : "ready-dot"}>{ready ? <CheckCircle2 size={15} /> : <Circle size={15} />}</span>
+      <strong>{label}</strong>
+      <small>
+        {value}/{total} configured
+      </small>
+      <ArrowRight size={14} />
     </div>
   );
 }
