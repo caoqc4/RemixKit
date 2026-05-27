@@ -1,26 +1,29 @@
 import { CheckCircle2, Circle, ExternalLink, KeyRound, ShieldAlert } from "lucide-react";
 import { AppShell } from "../shell";
 import { getProviderStatuses } from "@/lib/config/provider-status";
+import { getStorageMode } from "@/lib/jobs/storage";
 import { saveProviderSettings } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const statuses = await getProviderStatuses();
+  const storageMode = getStorageMode();
+  const hostedMode = storageMode === "vercel-blob";
 
   return (
     <AppShell>
       <div className="page-head">
         <div className="stack">
-          <p className="eyebrow">Local credentials</p>
+          <p className="eyebrow">{hostedMode ? "Hosted credentials" : "Local credentials"}</p>
           <h1>Configure your own model and video API keys.</h1>
           <p className="subtle">
-            Keys are read from environment variables or a local plaintext config file. No accounts, cloud sync, or hosted storage in the MVP.
+            Keys are read from environment variables first. Local development can also use a plaintext config file; hosted deployments should use Vercel environment variables.
           </p>
         </div>
         <span className="badge">
           <ShieldAlert size={14} />
-          Local plaintext
+          {hostedMode ? "Environment keys" : "Local plaintext"}
         </span>
       </div>
 
@@ -59,7 +62,7 @@ export default async function SettingsPage() {
         <h2>Save local keys</h2>
         <form action={saveProviderSettings} className="panel panel-pad stack">
           <p className="subtle">
-            Paste only the keys you want to add or update. Existing saved keys are preserved when a field is left blank.
+            Paste only the keys you want to add or update. Existing saved keys are preserved when a field is left blank. On Vercel, configure these as project environment variables instead of relying on saved local config.
           </p>
           <div className="provider-grid">
             {uniqueProvidersByEnvKey([...statuses.analysis, ...statuses.transcription, ...statuses.generation]).map((provider) => (

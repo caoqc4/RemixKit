@@ -1,18 +1,33 @@
 import { NextResponse } from "next/server";
-import { createLocalRemixJob } from "@/lib/jobs/create";
+import { createLocalRemixJob, createRemoteRemixJob } from "@/lib/jobs/create";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
   const video = formData.get("video");
+  const sourceUrl = normalizeSourceUrl(formData.get("sourceUrl"));
 
-  if (!(video instanceof File) || video.size === 0) {
-    return NextResponse.json({ error: "Upload a reference video before creating a remix job." }, { status: 400 });
+  if (video instanceof File && video.size > 0) {
+    const job = await createLocalRemixJob({
+      video,
+      goal: formData.get("goal"),
+      analysisProvider: formData.get("analysisProvider"),
+      generationProvider: formData.get("generationProvider")
+    });
+
+    return NextResponse.redirect(new URL(`/jobs/${job.id}`, request.url), 303);
   }
 
-  const job = await createLocalRemixJob({
-    video,
+  if (!sourceUrl) {
+    return NextResponse.json(
+      { error: "Upload a reference video or provide a public source video URL." },
+      { status: 400 }
+    );
+  }
+
+  const job = await createRemoteRemixJob({
+    sourceVideoUrl: sourceUrl,
     goal: formData.get("goal"),
     analysisProvider: formData.get("analysisProvider"),
     generationProvider: formData.get("generationProvider")
@@ -21,3 +36,20 @@ export async function POST(request: Request) {
   return NextResponse.redirect(new URL(`/jobs/${job.id}`, request.url), 303);
 }
 
+function normalizeSourceUrl(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}

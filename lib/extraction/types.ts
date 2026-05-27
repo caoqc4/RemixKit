@@ -1,6 +1,7 @@
 export type ExtractedVideoFacts = {
   jobId: string;
   sourceVideoPath: string;
+  sourceVideoUrl?: string;
   metadata: {
     durationSeconds?: number;
     width?: number;

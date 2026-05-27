@@ -56,11 +56,17 @@ async function main() {
   assertContains("lib/analysis/schema.ts", "variantPlansEnvelopeSchema");
   assertContains("lib/extraction/types.ts", "audio?:");
   assertContains("lib/extraction/types.ts", "transcript?:");
+  assertContains("lib/jobs/storage.ts", "vercel-blob");
+  assertContains("lib/jobs/storage.ts", "saveUploadedInput");
+  assertContains("lib/jobs/create.ts", "createRemoteRemixJob");
+  assertContains("app/api/jobs/route.ts", "sourceUrl");
+  assertContains("lib/providers/video/runway.ts", "sourceVideoUrl");
 
   assertContains("README.md", "Analysis providers are peers");
+  assertContains("README.md", "Deploy From GitHub to Vercel");
   assertContains("README.md", "Transcription is a separate evidence-extraction step");
   assertContains("docs/architecture.md", "OpenAI is only first in auto-selection order");
-  assertContains("docs/mvp-roadmap.md", "OpenAI audio transcription");
+  assertContains("docs/mvp-roadmap.md", "Vercel Blob job storage");
 
   const appApiFiles = await readdir(path.join(root, "app/api/jobs/[id]"));
   assert.deepEqual(

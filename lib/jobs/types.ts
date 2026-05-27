@@ -23,6 +23,8 @@ export type RemixJob = {
   status: RemixJobStatus;
   sourceFileName: string;
   sourceVideoPath: string;
+  sourceVideoUrl?: string;
+  storageMode?: "local" | "vercel-blob";
   goal: string;
   analysisProvider: ProviderSelection<AnalysisProviderId>;
   generationProvider: ProviderSelection<VideoProviderId>;

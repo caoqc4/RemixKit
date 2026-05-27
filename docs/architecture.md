@@ -4,7 +4,7 @@ Last updated: 2026-05-27
 
 ## System Shape
 
-RemixKit is a local-first Next.js application. The current MVP runs as a local web workbench and writes job data to the filesystem.
+RemixKit is a local-first Next.js application with a lightweight hosted storage mode. The local MVP writes job data to the filesystem; hosted deployments can write source videos and job artifacts to Vercel Blob.
 
 The core workflow is:
 
@@ -15,7 +15,7 @@ upload video
 -> plan variants
 -> submit video generation tasks
 -> refresh generation tasks
--> save local outputs
+-> save outputs
 ```
 
 The application owns workflow orchestration. Providers only own their own API calls.
@@ -38,13 +38,13 @@ lib/
   generation/                      video generation orchestration
   providers/analysis/              OpenAI, Gemini, Anthropic, DeepSeek adapters
   providers/video/                 Luma, Runway, provider registry
-  jobs/                            local filesystem persistence
+  jobs/                            filesystem or Vercel Blob persistence
   config/                          local plaintext credentials
 ```
 
 ## Job Storage
 
-Jobs are stored under:
+Local jobs are stored under:
 
 ```txt
 storage/jobs/{jobId}/
@@ -65,6 +65,8 @@ outputs/
 ```
 
 `job.json` is the source of truth for UI state. The other JSON and Markdown files are convenient artifacts for inspection and downstream use.
+
+When `REMIXKIT_STORAGE=vercel-blob` is set, or when the app runs on Vercel with `BLOB_READ_WRITE_TOKEN`, RemixKit stores the same job artifacts under `jobs/{jobId}/` in Vercel Blob. Source videos are public blobs so Luma and Runway can consume them by URL.
 
 ## Provider Principles
 
@@ -91,8 +93,8 @@ Transcription is separate from reasoning:
 
 Video providers are execution backends:
 
-- Runway supports local file upload through ephemeral uploads, then submits `gen4_aleph` tasks.
-- Luma Modify Video is wired for API submission but requires a public `media.url`.
+- Runway supports public source URLs in hosted mode and local file upload through ephemeral uploads in local mode, then submits `gen4_aleph` tasks.
+- Luma Modify Video is wired for API submission and requires a public `media.url`.
 - Veo, fal, and Replicate are registered provider slots for later adapters.
 
 ## Credential Model
@@ -114,7 +116,7 @@ The Settings UI links to official provider setup pages so users can sign in with
 - Scene-change frame extraction exists, but timestamp/range quality is still approximate.
 - Speech-to-text transcript exists through OpenAI transcription when configured; additional providers are not implemented yet.
 - No OCR.
-- No hosted local-file bridge for providers that require public URLs.
+- Hosted mode skips ffmpeg/ffprobe extraction; rich media extraction still requires local mode or a future worker.
 - No background queue; long-running operations happen inside request handlers.
 - No automated test suite yet.
 - No account system, billing, or hosted storage.

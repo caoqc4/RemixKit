@@ -7,7 +7,26 @@ import { transcribeExtractedAudio } from "@/lib/transcription/run";
 export async function extractVideoFacts(input: {
   jobId: string;
   sourceVideoPath: string;
+  sourceVideoUrl?: string;
 }): Promise<{ facts: ExtractedVideoFacts; warnings: string[] }> {
+  if (input.sourceVideoUrl) {
+    return {
+      facts: {
+        jobId: input.jobId,
+        sourceVideoPath: input.sourceVideoPath,
+        sourceVideoUrl: input.sourceVideoUrl,
+        metadata: {},
+        frames: [],
+        transcript: [],
+        ocr: [],
+        scenes: []
+      },
+      warnings: [
+        "Hosted storage mode stores the source video in Vercel Blob and skips local ffmpeg extraction. Analysis will use sparse evidence unless you run the app locally or add a background media extraction worker."
+      ]
+    };
+  }
+
   const probe = await probeVideo(input.sourceVideoPath);
   const frames = await sampleVideoFrames({
     sourceVideoPath: input.sourceVideoPath,

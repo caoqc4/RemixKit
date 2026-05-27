@@ -76,7 +76,7 @@ export default async function JobPage({ params }: PageProps) {
           <form action={`/api/jobs/${job.id}/generate`} className="section stack" method="post">
             <h2>Video generation</h2>
             <p className="subtle">
-              Generate videos from the current variant plans. Auto-select prefers a configured provider that can accept local uploads; Runway supports this through ephemeral uploads.
+              Generate videos from the current variant plans. Auto-select uses the public source URL in hosted mode, or a configured provider that can accept local uploads in local mode.
             </p>
             <button className="button" type="submit" disabled={!job.variantPlans?.length}>
               <Sparkles size={16} />
@@ -90,7 +90,7 @@ export default async function JobPage({ params }: PageProps) {
           <form action={`/api/jobs/${job.id}/refresh-generated`} className="section stack" method="post">
             <h2>Refresh generation tasks</h2>
             <p className="subtle">
-              Check submitted provider tasks for completion. Completed Runway outputs are downloaded into the local job outputs folder.
+              Check submitted provider tasks for completion. Completed outputs are saved back to the active storage backend.
             </p>
             <button className="button secondary" type="submit" disabled={!job.generatedVideos?.length}>
               Refresh generated videos
@@ -203,9 +203,17 @@ export default async function JobPage({ params }: PageProps) {
           </section>
 
           <section className="panel panel-pad stack">
-            <h2>Local files</h2>
+            <h2>Source storage</h2>
+            <p className="subtle">{job.storageMode ?? "local"}</p>
             <p className="mono">{job.sourceVideoPath}</p>
-            <p className="subtle">Job data is stored under storage/jobs/{job.id}.</p>
+            {job.sourceVideoUrl ? (
+              <a className="button secondary" href={job.sourceVideoUrl} rel="noreferrer" target="_blank">
+                Open source video
+              </a>
+            ) : null}
+            <p className="subtle">
+              Job data is stored in {job.storageMode === "vercel-blob" ? "Vercel Blob" : "storage/jobs/{job.id}"}.
+            </p>
           </section>
 
           <section className="panel panel-pad stack">

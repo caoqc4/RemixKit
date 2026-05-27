@@ -1,12 +1,11 @@
 import { getCredential, getConfigValue } from "@/lib/config/local-config";
-import { getJobOutputPath, readJob, saveJob } from "@/lib/jobs/storage";
+import { readJob, saveGeneratedOutput, saveJob } from "@/lib/jobs/storage";
 import type { RemixJob } from "@/lib/jobs/types";
 import { selectVideoProvider } from "@/lib/providers/selection";
 import { videoAdapters } from "@/lib/providers/video/adapters";
 import { refreshRunwayGeneratedVideo } from "@/lib/providers/video/refresh";
 import { getVideoProvider } from "@/lib/providers/video/registry";
 import type { GeneratedVideo, VideoProviderId } from "@/lib/providers/video/types";
-import { writeFile } from "node:fs/promises";
 
 const maxVariantsPerRun = 3;
 
@@ -21,10 +20,10 @@ export async function generateRemixJobVideos(jobId: string): Promise<RemixJob> {
 
   const providerId = await selectVideoProvider(job.generationProvider, {
     supportsVideoToVideo: true,
-    supportsLocalFileUpload: job.generationProvider === "auto"
+    supportsLocalFileUpload: job.generationProvider === "auto" && !job.sourceVideoUrl
   });
   if (!providerId) {
-    throw new Error("No configured video provider is available for this local video workflow.");
+    throw new Error("No configured video provider is available for this remix workflow.");
   }
 
   const provider = getVideoProvider(providerId);
@@ -62,7 +61,8 @@ export async function generateRemixJobVideos(jobId: string): Promise<RemixJob> {
         jobId,
         variantId: variant.id,
         prompt: variant.providerPrompt,
-        sourceVideoPath: job.sourceVideoPath
+        sourceVideoPath: job.sourceVideoPath,
+        sourceVideoUrl: job.sourceVideoUrl
       });
       generatedVideos.push(generated);
     }
@@ -149,10 +149,14 @@ async function downloadGeneratedVideo(jobId: string, video: GeneratedVideo): Pro
     };
   }
 
-  const outputPath = getJobOutputPath(jobId, `${video.variantId}-${video.provider}.mp4`);
-  await writeFile(outputPath, Buffer.from(await response.arrayBuffer()));
+  const savedOutput = await saveGeneratedOutput(
+    jobId,
+    `${video.variantId}-${video.provider}.mp4`,
+    await response.arrayBuffer()
+  );
   return {
     ...video,
-    outputPath
+    outputPath: savedOutput.path,
+    outputUrl: savedOutput.url ?? video.outputUrl
   };
 }

@@ -1,7 +1,7 @@
 import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { AppShell } from "./shell";
 import { getProviderStatuses } from "@/lib/config/provider-status";
-import { listJobs } from "@/lib/jobs/storage";
+import { getStorageMode, listJobs } from "@/lib/jobs/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +22,13 @@ export default async function HomePage() {
   const configuredAnalysis = statuses.analysis.filter((provider) => provider.configured);
   const configuredTranscription = statuses.transcription.filter((provider) => provider.configured);
   const configuredGeneration = statuses.generation.filter((provider) => provider.configured);
+  const storageMode = getStorageMode();
 
   return (
     <AppShell>
       <div className="page-head">
         <div className="stack">
-          <p className="eyebrow">Local creative workflow</p>
+          <p className="eyebrow">{storageMode === "vercel-blob" ? "Hosted creative workflow" : "Local creative workflow"}</p>
           <h1>Turn a reference creative into fresh video ad variants.</h1>
           <p className="subtle">
             Upload one video, extract its marketing structure, then generate original variant plans and video assets with your own provider keys.
@@ -44,7 +45,7 @@ export default async function HomePage() {
           <div className="stack">
             <h2>Create a remix job</h2>
             <p className="subtle">
-              The first build focuses on local files. URL import can be added as an experimental path once the core job flow is stable.
+              Upload a user-owned reference video. Local mode extracts frames and audio with ffmpeg; hosted mode stores the source in Vercel Blob and uses its public URL for video providers.
             </p>
           </div>
 
@@ -52,6 +53,17 @@ export default async function HomePage() {
             <div className="field">
               <label htmlFor="video">Reference video</label>
               <input className="input" id="video" name="video" type="file" accept="video/*" />
+            </div>
+
+            <div className="field">
+              <label htmlFor="sourceUrl">Public video URL</label>
+              <input
+                className="input"
+                id="sourceUrl"
+                name="sourceUrl"
+                placeholder="https://example.com/your-owned-reference-video.mp4"
+                type="url"
+              />
             </div>
 
             <div className="field">
@@ -94,7 +106,7 @@ export default async function HomePage() {
               Run analysis and generate
             </button>
             <p className="subtle">
-              This creates a local job, stores the uploaded video, and extracts metadata when ffprobe is available.
+              Upload a file for local extraction, or paste a public video URL for a hosted-friendly path.
             </p>
           </form>
         </section>
@@ -138,7 +150,7 @@ export default async function HomePage() {
           <section className="panel panel-pad stack">
             <h2>Output shape</h2>
             <p className="subtle">
-              Each job will save analysis JSON, remix brief, variant prompts, and generated videos under a local storage folder.
+              Each job saves analysis JSON, remix brief, variant prompts, and generated videos in {storageMode === "vercel-blob" ? "Vercel Blob" : "the local storage folder"}.
             </p>
             <a className="button secondary" href="/settings">
               Configure providers
@@ -162,7 +174,7 @@ export default async function HomePage() {
                 ))}
               </div>
             ) : (
-              <p className="subtle">No local jobs yet.</p>
+              <p className="subtle">No jobs yet.</p>
             )}
           </section>
         </aside>

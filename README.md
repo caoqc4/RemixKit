@@ -2,13 +2,14 @@
 
 Open-source AI workflow for generating video ad variations from reference creatives.
 
-RemixKit is currently a local-first Next.js demo. It is designed to help users upload one reference video, extract creative structure, choose their own analysis and video providers, and generate original ad variants.
+RemixKit is currently a local-first Next.js demo with a lightweight hosted mode for GitHub/Vercel deployment. It is designed to help users upload one reference video, extract creative structure, choose their own analysis and video providers, and generate original ad variants.
 
 ## Current MVP
 
-- Local web workbench.
-- Single reference video upload.
+- Web workbench.
+- Single reference video upload or public source video URL.
 - Local job storage under `storage/jobs`.
+- Optional Vercel Blob storage for hosted deployments.
 - Provider settings page.
 - Peer analysis providers:
   - OpenAI
@@ -76,7 +77,33 @@ LUMA_VIDEO_MODEL=ray-flash-2
 
 The Settings page can save keys into `.remixkit/config.json`. This file is plaintext local config and is ignored by git.
 
+For hosted deployments, configure keys as environment variables in the hosting platform. The settings page is useful for seeing what is missing, but local plaintext config is not persistent on serverless platforms.
+
 The Settings page also links to each provider's official setup page. Direct official-account login is not implemented in the local MVP; it can be added later for providers that expose a stable OAuth or device-code flow.
+
+## Deploy From GitHub to Vercel
+
+1. Push the repository to GitHub.
+2. Import the GitHub repo in Vercel as a Next.js project.
+3. Create a Vercel Blob store and connect it to the project.
+4. Set environment variables:
+
+```bash
+REMIXKIT_STORAGE=vercel-blob
+BLOB_READ_WRITE_TOKEN=...
+OPENAI_API_KEY=...
+GEMINI_API_KEY=...
+ANTHROPIC_API_KEY=...
+DEEPSEEK_API_KEY=...
+LUMA_API_KEY=...
+RUNWAY_API_KEY=...
+```
+
+Hosted mode stores uploaded source videos, job JSON, remix briefs, and downloaded outputs in Vercel Blob. Source videos are saved as public blobs so video providers can read them by URL.
+
+Hosted mode currently skips local ffmpeg/ffprobe extraction because Vercel serverless functions do not provide the same durable filesystem workflow as local development. Analysis still runs with sparse source evidence and the public source URL; run locally when you need full frame/audio/transcript extraction.
+
+For hosted demos, a public source video URL is the most reliable path because it avoids platform request-size limits for large video uploads.
 
 ## Provider Selection
 
@@ -93,8 +120,8 @@ Provider capability differences:
 
 Generation provider behavior:
 
-- Runway can accept local uploaded videos through its ephemeral upload API, then submits `gen4_aleph` video-to-video tasks.
-- Luma Modify Video is wired for API submission, but requires a publicly reachable `media.url`; local-only uploads need to be hosted before Luma can run.
+- Runway can accept a public source video URL in hosted mode, or local uploaded videos through its ephemeral upload API in local mode, then submits `gen4_aleph` video-to-video tasks.
+- Luma Modify Video is wired for API submission and requires a publicly reachable `media.url`; hosted mode provides that through Vercel Blob.
 - Veo, fal, and Replicate are provider slots for follow-up adapters.
 
 ## ffmpeg / ffprobe

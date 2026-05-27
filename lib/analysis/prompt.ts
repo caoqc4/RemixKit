@@ -49,6 +49,7 @@ function formatFacts(facts: ExtractedVideoFacts) {
   return JSON.stringify(
     {
       metadata: facts.metadata,
+      sourceVideoUrl: facts.sourceVideoUrl,
       frames: facts.frames,
       transcript: facts.transcript,
       ocr: facts.ocr,
