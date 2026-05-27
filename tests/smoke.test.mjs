@@ -61,13 +61,14 @@ async function main() {
   assertContains("lib/jobs/create.ts", "createRemoteRemixJob");
   assertContains("app/api/jobs/route.ts", "sourceUrl");
   assertContains("lib/providers/video/runway.ts", "sourceVideoUrl");
-  assertContains("app/page.tsx", "工作台");
-  assertContains("app/page.tsx", "AI 视频广告混剪工作流");
-  assertContains("app/page.tsx", "工作流程");
-  assertContains("app/page.tsx", "生成视频");
-  assertContains("app/jobs/page.tsx", "任务队列");
-  assertContains("app/settings/page.tsx", "服务商配置");
-  assertContains("app/jobs/[id]/page.tsx", "action-deck");
+  assertContains("app/page.tsx", "RemixDashboard");
+  assertContains("app/jobs/page.tsx", 'initialNav: "jobs"');
+  assertContains("app/settings/page.tsx", 'initialNav: "providers"');
+  assertContains("app/jobs/[id]/page.tsx", "jobId: id");
+  assertContains("components/dashboard/sidebar.tsx", "工作台");
+  assertContains("components/dashboard/remix-brief.tsx", "创意目标");
+  assertContains("components/dashboard/pipeline-board.tsx", "工作流程");
+  assertContains("components/dashboard/job-detail.tsx", "生成视频");
 
   assertContains("README.md", "Analysis providers are peers");
   assertContains("README.md", "Deploy From GitHub to Vercel");

@@ -10,3 +10,5 @@ coverage
 storage
 *.log
 *.tsbuildinfo
+.DS_Store
+remix-kit
