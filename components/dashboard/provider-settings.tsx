@@ -1,6 +1,5 @@
 "use client"
 
-import { cn } from "@/lib/utils"
 import {
   CheckCircle2,
   AlertCircle,
@@ -8,14 +7,14 @@ import {
   Key,
   Eye,
   EyeOff,
-  Copy,
-  Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { useState } from "react"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { text } from "@/components/dashboard/i18n"
 
 interface ProviderConfig {
   id: string
@@ -30,23 +29,24 @@ interface ProviderConfig {
 interface ProviderSettingsProps {
   providers: ProviderConfig[]
   onSaveKey: (providerId: string, key: string) => void
-}
-
-const categoryLabels: Record<string, string> = {
-  analysis: "分析模型",
-  video: "视频生成",
-  storage: "存储服务",
-  transcription: "转写服务",
+  language: DashboardLanguage
 }
 
 export function ProviderSettings({
   providers,
   onSaveKey,
+  language,
 }: ProviderSettingsProps) {
   const [editingProvider, setEditingProvider] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const t = text[language]
+  const categoryLabels: Record<string, string> = {
+    analysis: t.categoryAnalysis,
+    video: t.categoryVideo,
+    storage: t.categoryStorage,
+    transcription: t.categoryTranscription,
+  }
 
   const groupedProviders = providers.reduce(
     (acc, provider) => {
@@ -92,7 +92,7 @@ export function ProviderSettings({
                           className="border-success/30 text-success"
                         >
                           <CheckCircle2 className="mr-1 h-3 w-3" />
-                          已配置
+                          {t.configured}
                         </Badge>
                       ) : (
                         <Badge
@@ -100,7 +100,7 @@ export function ProviderSettings({
                           className="border-warning/30 text-warning"
                         >
                           <AlertCircle className="mr-1 h-3 w-3" />
-                          待配置
+                          {t.pendingConfig}
                         </Badge>
                       )}
                     </div>
@@ -119,7 +119,7 @@ export function ProviderSettings({
                           rel="noopener noreferrer"
                           className="gap-1.5"
                         >
-                          文档
+                          {t.docsShort}
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       </Button>
@@ -136,7 +136,7 @@ export function ProviderSettings({
                       }}
                     >
                       <Key className="mr-1.5 h-3.5 w-3.5" />
-                      {provider.configured ? "更新密钥" : "添加密钥"}
+                      {provider.configured ? t.updateKey : t.addKey}
                     </Button>
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export function ProviderSettings({
                   <div className="mt-4 space-y-3 border-t border-border pt-4">
                     <div className="space-y-2">
                       <Label htmlFor={`key-${provider.id}`} className="text-sm">
-                        API 密钥
+                        {t.apiKey}
                       </Label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -176,12 +176,12 @@ export function ProviderSettings({
                           disabled={!apiKey.trim()}
                           size="sm"
                         >
-                          保存
+                          {t.save}
                         </Button>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      密钥会保存到 RemixKit 本地开发配置；托管环境请使用环境变量。
+                      {t.keyNotice}
                     </p>
                   </div>
                 )}

@@ -8,11 +8,12 @@ import {
   Video,
   X,
   AlertTriangle,
-  CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { text } from "@/components/dashboard/i18n"
 
 interface SourceIntakeProps {
   onSourceChange: (source: {
@@ -25,12 +26,14 @@ interface SourceIntakeProps {
     file?: File
     url?: string
   }
+  language: DashboardLanguage
 }
 
-export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
+export function SourceIntake({ onSourceChange, source, language }: SourceIntakeProps) {
   const [dragActive, setDragActive] = useState(false)
   const [urlInput, setUrlInput] = useState("")
   const [inputMode, setInputMode] = useState<"upload" | "url">("upload")
+  const t = text[language]
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -81,7 +84,7 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium text-foreground">素材来源</Label>
+        <Label className="text-sm font-medium text-foreground">{t.source}</Label>
         <div className="flex rounded-md border border-border bg-muted/50 p-0.5">
           <button
             type="button"
@@ -94,7 +97,7 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
             )}
           >
             <Upload className="h-3 w-3" />
-            上传
+            {t.upload}
           </button>
           <button
             type="button"
@@ -107,7 +110,7 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
             )}
           >
             <Link2 className="h-3 w-3" />
-            链接
+            {t.link}
           </button>
         </div>
       </div>
@@ -121,7 +124,7 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
             <p className="truncate text-sm font-medium text-foreground">
               {source.type === "upload"
                 ? source.file?.name
-                : "外部视频链接"}
+                : t.externalVideoLink}
             </p>
             <p className="text-xs text-muted-foreground">
               {source.type === "upload"
@@ -159,16 +162,16 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
           />
           <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
           <p className="text-sm font-medium text-foreground">
-            拖放视频文件或点击上传
+            {t.dropVideo}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            支持 MP4、MOV、WebM 格式
+            {t.supportedFormats}
           </p>
         </div>
       ) : (
         <div className="flex gap-2">
           <Input
-            placeholder="粘贴公开视频链接..."
+            placeholder={t.pasteUrl}
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             className="flex-1"
@@ -179,7 +182,7 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
             size="sm"
             className="shrink-0"
           >
-            确认
+            {t.confirm}
           </Button>
         </div>
       )}
@@ -188,7 +191,7 @@ export function SourceIntake({ onSourceChange, source }: SourceIntakeProps) {
       <div className="flex items-start gap-2 rounded-md bg-warning/5 border border-warning/20 p-2.5">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
         <p className="text-xs text-muted-foreground">
-          请仅使用您拥有版权或已获授权的素材。生成的变体仅用于参考学习，商用需确保合规。
+          {t.legalNotice}
         </p>
       </div>
     </div>

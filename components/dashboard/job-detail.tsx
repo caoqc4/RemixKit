@@ -12,10 +12,6 @@ import {
   CheckCircle2,
   Loader2,
   ChevronDown,
-  BarChart3,
-  FileText,
-  Layers,
-  ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +21,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { metricLabel, statusLabel, text } from "@/components/dashboard/i18n"
 
 interface JobMetric {
   label: string
@@ -62,6 +60,7 @@ interface JobDetailProps {
   onAnalyze: () => void
   onGenerate: () => void
   onRefresh: () => void
+  language: DashboardLanguage
 }
 
 export function JobDetail({
@@ -72,7 +71,10 @@ export function JobDetail({
   onAnalyze,
   onGenerate,
   onRefresh,
+  language,
 }: JobDetailProps) {
+  const t = text[language]
+
   return (
     <div className="space-y-6 rounded-lg border border-border bg-card p-6">
       {/* Header */}
@@ -92,17 +94,17 @@ export function JobDetail({
               {job.status === "completed" && (
                 <>
                   <CheckCircle2 className="mr-1 h-3 w-3" />
-                  完成
+                  {statusLabel(language, "completed")}
                 </>
               )}
               {job.status === "running" && (
                 <>
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  运行中
+                  {statusLabel(language, "running")}
                 </>
               )}
-              {job.status === "failed" && "失败"}
-              {job.status === "queued" && "队列中"}
+              {job.status === "failed" && statusLabel(language, "failed")}
+              {job.status === "queued" && statusLabel(language, "queued")}
             </Badge>
           </div>
           <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
@@ -126,15 +128,15 @@ export function JobDetail({
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={onAnalyze}>
             <Search className="mr-1.5 h-3.5 w-3.5" />
-            分析
+            {t.analyze}
           </Button>
           <Button variant="outline" size="sm" onClick={onGenerate}>
             <Play className="mr-1.5 h-3.5 w-3.5" />
-            生成
+            {t.generate}
           </Button>
           <Button variant="outline" size="sm" onClick={onRefresh}>
             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-            刷新
+            {t.refresh}
           </Button>
         </div>
       </div>
@@ -143,7 +145,7 @@ export function JobDetail({
       {job.status === "running" && job.progress !== undefined && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">处理进度</span>
+            <span className="text-muted-foreground">{t.progress}</span>
             <span className="font-medium text-foreground">{job.progress}%</span>
           </div>
           <Progress value={job.progress} className="h-2" />
@@ -177,9 +179,9 @@ export function JobDetail({
             key={metric.label}
             className="rounded-md border border-border bg-muted/30 px-3 py-2"
           >
-            <p className="text-xs text-muted-foreground">{metric.label}</p>
+            <p className="text-xs text-muted-foreground">{metricLabel(language, metric.label)}</p>
             <p className="mt-0.5 text-lg font-semibold text-foreground">
-              {metric.value}
+              {metric.value === "待分析" ? t.pendingAnalysis : metric.value}
             </p>
             {metric.change && (
               <p className="text-xs text-success">{metric.change}</p>
@@ -193,7 +195,7 @@ export function JobDetail({
         <Collapsible defaultOpen>
           <CollapsibleTrigger className="flex w-full items-center justify-between py-2">
             <h3 className="text-sm font-medium text-foreground">
-              生成视频 ({generatedVideos.length})
+              {t.generatedVideos} ({generatedVideos.length})
             </h3>
             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
           </CollapsibleTrigger>
@@ -248,15 +250,15 @@ export function JobDetail({
       <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            素材存储
+            {t.sourceStorage}
           </h4>
           <p className="mt-1 text-sm text-foreground">
-            {job.sourceFile || "未上传"}
+            {job.sourceFile || t.noUpload}
           </p>
         </div>
         <div>
           <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            使用配置
+            {t.configUsed}
           </h4>
           <p className="mt-1 text-sm text-foreground">
             {job.analysisModel} + {job.videoProvider}

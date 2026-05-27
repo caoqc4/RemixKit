@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { artifactName, statusLabel, text } from "@/components/dashboard/i18n"
 
 interface Provider {
   id: string
@@ -43,6 +45,7 @@ interface InspectionRailProps {
   recentJobs: RecentJob[]
   onViewJob: (jobId: string) => void
   onConfigureProvider: (providerId: string) => void
+  language: DashboardLanguage
 }
 
 export function InspectionRail({
@@ -51,7 +54,10 @@ export function InspectionRail({
   recentJobs,
   onViewJob,
   onConfigureProvider,
+  language,
 }: InspectionRailProps) {
+  const t = text[language]
+
   return (
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-1">
@@ -59,7 +65,7 @@ export function InspectionRail({
           {/* Provider Readiness */}
           <div className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              服务状态
+              {t.providerStatus}
             </h3>
             <div className="space-y-2">
               {providers.map((provider) => (
@@ -84,7 +90,7 @@ export function InspectionRail({
                       className="h-6 px-2 text-xs text-primary hover:text-primary"
                       onClick={() => onConfigureProvider(provider.id)}
                     >
-                      配置
+                      {t.configure}
                       <ExternalLink className="ml-1 h-3 w-3" />
                     </Button>
                   )}
@@ -97,7 +103,7 @@ export function InspectionRail({
           {artifacts.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                生成产物
+                {t.artifacts}
               </h3>
               <div className="space-y-2">
                 {artifacts.map((artifact) => (
@@ -118,7 +124,7 @@ export function InspectionRail({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">
-                        {artifact.name}
+                        {artifactName(language, artifact.name)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {artifact.createdAt}
@@ -133,7 +139,7 @@ export function InspectionRail({
           {/* Recent Jobs */}
           <div className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              最近任务
+              {t.recentJobs}
             </h3>
             <div className="space-y-2">
               {recentJobs.map((job) => (
@@ -161,10 +167,7 @@ export function InspectionRail({
                             "border-muted-foreground/30 text-muted-foreground"
                         )}
                       >
-                        {job.status === "completed" && "完成"}
-                        {job.status === "running" && "运行中"}
-                        {job.status === "failed" && "失败"}
-                        {job.status === "queued" && "队列中"}
+                        {statusLabel(language, job.status)}
                       </Badge>
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
@@ -173,7 +176,7 @@ export function InspectionRail({
                       {job.variants && (
                         <>
                           <span>·</span>
-                          <span>{job.variants} 个变体</span>
+                          <span>{language === "zh" ? `${job.variants} ${t.variants}` : `${job.variants} ${t.variants}`}</span>
                         </>
                       )}
                     </div>

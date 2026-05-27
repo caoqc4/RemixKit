@@ -18,6 +18,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { statusLabel, text } from "@/components/dashboard/i18n"
 
 export type DashboardProvider = {
   id: string
@@ -123,6 +125,7 @@ export function RemixDashboard({
 }: DashboardPageProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [activeNav, setActiveNav] = useState<DashboardNav>(initialNav)
+  const [language, setLanguage] = useState<DashboardLanguage>("zh")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Workbench state
@@ -138,6 +141,7 @@ export function RemixDashboard({
   const [isRunning, setIsRunning] = useState(false)
   const [pipelineStages, setPipelineStages] = useState<PipelineStage[]>(defaultStages)
   const [selectedJob] = useState<string | null>(jobDetail?.id ?? recentJobs[0]?.id ?? null)
+  const t = text[language]
 
   const providerStatus = {
     analysis: providers.some((p) => p.type === "analysis" && p.configured),
@@ -151,7 +155,7 @@ export function RemixDashboard({
     setIsRunning(true)
     setPipelineStages((prev) =>
       prev.map((stage, index) =>
-        index === 0 ? { ...stage, status: "active", detail: "提交任务..." } : { ...stage, status: "pending" }
+        index === 0 ? { ...stage, status: "active", detail: t.submitJob } : { ...stage, status: "pending" }
       )
     )
 
@@ -183,14 +187,14 @@ export function RemixDashboard({
       console.error("[RemixKit] Failed to start remix run:", error)
       setPipelineStages((prev) =>
         prev.map((stage, i) => {
-          if (i === 0) return { ...stage, status: "error", detail: "提交失败" }
+          if (i === 0) return { ...stage, status: "error", detail: t.submitFailed }
           return { ...stage, status: "pending" }
         })
       )
     } finally {
       setIsRunning(false)
     }
-  }, [analysisModel, brief, canStart, source, videoProvider])
+  }, [analysisModel, brief, canStart, source, t.submitFailed, t.submitJob, videoProvider])
 
   const handleViewJob = useCallback((jobId: string) => {
     window.location.href = `/jobs/${jobId}`
@@ -230,6 +234,7 @@ export function RemixDashboard({
       }}
       collapsed={false}
       onCollapsedChange={() => {}}
+      language={language}
     />
   )
 
@@ -242,6 +247,7 @@ export function RemixDashboard({
           onNavChange={(nav) => setActiveNav(nav as DashboardNav)}
           collapsed={sidebarCollapsed}
           onCollapsedChange={setSidebarCollapsed}
+          language={language}
         />
       </div>
 
@@ -278,10 +284,12 @@ export function RemixDashboard({
             storageMode={storageMode}
             onStorageModeChange={setStorageMode}
             providerStatus={providerStatus}
+            language={language}
+            onLanguageChange={setLanguage}
             recentRun={
               isRunning
-                ? { status: "running", timestamp: "运行中", jobId: "current" }
-                : { status: "completed", timestamp: "10 分钟前", jobId: "job-1" }
+                ? { status: "running", timestamp: t.running, jobId: "current" }
+                : { status: "completed", timestamp: t.recentRun, jobId: "job-1" }
             }
           />
         </div>
@@ -300,9 +308,11 @@ export function RemixDashboard({
                         storageMode={storageMode}
                         onStorageModeChange={setStorageMode}
                         providerStatus={providerStatus}
+                        language={language}
+                        onLanguageChange={setLanguage}
                         recentRun={
                           isRunning
-                            ? { status: "running", timestamp: "运行中", jobId: "current" }
+                            ? { status: "running", timestamp: t.running, jobId: "current" }
                             : undefined
                         }
                       />
@@ -312,7 +322,7 @@ export function RemixDashboard({
                     <div className="grid gap-6 lg:grid-cols-2">
                       {/* Source Intake */}
                       <div className="rounded-lg border border-border bg-card p-4">
-                        <SourceIntake source={source} onSourceChange={setSource} />
+                        <SourceIntake source={source} onSourceChange={setSource} language={language} />
                       </div>
 
                       {/* Remix Brief */}
@@ -329,13 +339,14 @@ export function RemixDashboard({
                           canStart={canStart}
                           analysisModels={analysisModels}
                           videoProviders={videoProviders}
+                          language={language}
                         />
                       </div>
                     </div>
 
                     {/* Pipeline Board - Full width on mobile, side panel on large */}
                     <div className="rounded-lg border border-border bg-card p-4 xl:hidden">
-                      <PipelineBoard stages={pipelineStages} />
+                      <PipelineBoard stages={pipelineStages} language={language} />
                     </div>
 
                     {/* Job Detail Section */}
@@ -343,9 +354,9 @@ export function RemixDashboard({
                       <JobDetail
                         job={jobDetail ?? {
                           id: selectedJob,
-                          name: "等待任务数据",
+                          name: t.waitingJob,
                           status: "queued",
-                          createdAt: "尚未创建",
+                          createdAt: t.notCreated,
                         }}
                         metrics={metrics}
                         generatedVideos={generatedVideos}
@@ -353,6 +364,7 @@ export function RemixDashboard({
                         onAnalyze={() => runJobAction("analyze")}
                         onGenerate={() => runJobAction("generate")}
                         onRefresh={() => runJobAction("refresh-generated")}
+                        language={language}
                       />
                     )}
                   </div>
@@ -364,7 +376,7 @@ export function RemixDashboard({
                 <div className="flex h-full flex-col">
                   {/* Pipeline compact view */}
                   <div className="border-b border-border p-4">
-                    <PipelineBoard stages={pipelineStages} />
+                    <PipelineBoard stages={pipelineStages} language={language} />
                   </div>
                   {/* Inspection */}
                   <InspectionRail
@@ -373,6 +385,7 @@ export function RemixDashboard({
                     recentJobs={recentJobs}
                     onViewJob={handleViewJob}
                     onConfigureProvider={handleConfigureProvider}
+                    language={language}
                   />
                 </div>
               </div>
@@ -384,7 +397,7 @@ export function RemixDashboard({
               <div className="p-4 lg:p-6">
                 <div className="mx-auto max-w-4xl">
                   <h2 className="mb-4 text-lg font-semibold text-foreground">
-                    任务队列
+                    {t.jobs}
                   </h2>
                   <div className="space-y-3">
                     {recentJobs.length ? recentJobs.map((job) => (
@@ -399,7 +412,7 @@ export function RemixDashboard({
                           </span>
                           <p className="mt-0.5 text-sm text-muted-foreground">
                             {job.createdAt}
-                            {job.variants && ` · ${job.variants} 个变体`}
+                            {job.variants && ` · ${job.variants} ${t.variants}`}
                           </p>
                         </div>
                         <span
@@ -413,14 +426,12 @@ export function RemixDashboard({
                               "bg-muted text-muted-foreground"
                           )}
                         >
-                          {job.status === "completed" && "完成"}
-                          {job.status === "running" && "运行中"}
-                          {job.status === "queued" && "队列中"}
+                          {statusLabel(language, job.status)}
                         </span>
                       </button>
                     )) : (
                       <div className="rounded-lg border border-dashed border-border bg-card p-6 text-sm text-muted-foreground">
-                        还没有任务。回到工作台上传一个参考视频开始。
+                        {t.noJobs}
                       </div>
                     )}
                   </div>
@@ -434,14 +445,15 @@ export function RemixDashboard({
               <div className="p-4 lg:p-6">
                 <div className="mx-auto max-w-2xl">
                   <h2 className="mb-1 text-lg font-semibold text-foreground">
-                    服务商配置
+                    {t.providerSettings}
                   </h2>
                   <p className="mb-6 text-sm text-muted-foreground">
-                    配置您的 API 密钥以启用各项服务。密钥仅保存在本地。
+                    {t.providerSettingsHelp}
                   </p>
                   <ProviderSettings
                     providers={providerConfigs}
                     onSaveKey={handleSaveKey}
+                    language={language}
                   />
                 </div>
               </div>
@@ -453,17 +465,17 @@ export function RemixDashboard({
               <div className="p-4 lg:p-6">
                 <div className="mx-auto max-w-2xl">
                   <h2 className="mb-1 text-lg font-semibold text-foreground">
-                    设置
+                    {t.settings}
                   </h2>
                   <p className="mb-6 text-sm text-muted-foreground">
-                    管理应用偏好设置和数据
+                    {t.settingsHelp}
                   </p>
 
                   <div className="space-y-4">
                     <div className="rounded-lg border border-border bg-card p-4">
-                      <h3 className="font-medium text-foreground">存储设置</h3>
+                      <h3 className="font-medium text-foreground">{t.storageSettings}</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        选择素材和生成结果的存储位置
+                        {t.storageSettingsHelp}
                       </p>
                       <div className="mt-3 flex gap-2">
                         <Button
@@ -471,42 +483,42 @@ export function RemixDashboard({
                           size="sm"
                           onClick={() => setStorageMode("local")}
                         >
-                          本地存储
+                          {t.localStorage}
                         </Button>
                         <Button
                           variant={storageMode === "cloud" ? "default" : "outline"}
                           size="sm"
                           onClick={() => setStorageMode("cloud")}
                         >
-                          云存储
+                          {t.cloudStorage}
                         </Button>
                       </div>
                     </div>
 
                     <div className="rounded-lg border border-border bg-card p-4">
-                      <h3 className="font-medium text-foreground">数据管理</h3>
+                      <h3 className="font-medium text-foreground">{t.dataManagement}</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        清除本地缓存或导出数据
+                        {t.dataManagementHelp}
                       </p>
                       <div className="mt-3 flex gap-2">
                         <Button variant="outline" size="sm">
-                          导出数据
+                          {t.exportData}
                         </Button>
                         <Button variant="outline" size="sm" className="text-destructive">
-                          清除缓存
+                          {t.clearCache}
                         </Button>
                       </div>
                     </div>
 
                     <div className="rounded-lg border border-border bg-card p-4">
-                      <h3 className="font-medium text-foreground">关于</h3>
+                      <h3 className="font-medium text-foreground">{t.about}</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
                         RemixKit v1.0.0
                       </p>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        开源 AI 视频广告混剪工作流。
+                        {t.aboutText}
                         <a href="#" className="ml-1 text-primary hover:underline">
-                          查看文档
+                          {t.docs}
                         </a>
                       </p>
                     </div>

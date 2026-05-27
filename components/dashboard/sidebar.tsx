@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -18,19 +17,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { text } from "@/components/dashboard/i18n"
 
 interface SidebarProps {
   activeNav: string
   onNavChange: (nav: string) => void
   collapsed: boolean
   onCollapsedChange: (collapsed: boolean) => void
+  language: DashboardLanguage
 }
 
 const navItems = [
-  { id: "workbench", label: "工作台", icon: LayoutDashboard },
-  { id: "jobs", label: "任务队列", icon: ListTodo },
-  { id: "providers", label: "服务商", icon: Plug },
-  { id: "settings", label: "设置", icon: Settings },
+  { id: "workbench", labelKey: "workbench", icon: LayoutDashboard },
+  { id: "jobs", labelKey: "jobs", icon: ListTodo },
+  { id: "providers", labelKey: "providers", icon: Plug },
+  { id: "settings", labelKey: "settings", icon: Settings },
 ]
 
 export function Sidebar({
@@ -38,7 +40,9 @@ export function Sidebar({
   onNavChange,
   collapsed,
   onCollapsedChange,
+  language,
 }: SidebarProps) {
+  const t = text[language]
   return (
     <TooltipProvider delayDuration={0}>
       <aside
@@ -64,6 +68,7 @@ export function Sidebar({
           {navItems.map((item) => {
             const isActive = activeNav === item.id
             const Icon = item.icon
+            const label = t[item.labelKey as keyof typeof t]
 
             const button = (
               <button
@@ -77,7 +82,7 @@ export function Sidebar({
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && <span>{label}</span>}
               </button>
             )
 
@@ -86,7 +91,7 @@ export function Sidebar({
                 <Tooltip key={item.id}>
                   <TooltipTrigger asChild>{button}</TooltipTrigger>
                   <TooltipContent side="right" className="font-medium">
-                    {item.label}
+                    {label}
                   </TooltipContent>
                 </Tooltip>
               )

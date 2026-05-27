@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Sparkles, ChevronDown, Play } from "lucide-react"
+import { Sparkles, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { text } from "@/components/dashboard/i18n"
 
 interface RemixBriefProps {
   brief: string
@@ -33,6 +35,7 @@ interface RemixBriefProps {
     name: string
     status?: "ready" | "beta" | "new"
   }[]
+  language: DashboardLanguage
 }
 
 const defaultAnalysisModels = [
@@ -60,7 +63,10 @@ export function RemixBrief({
   canStart,
   analysisModels = defaultAnalysisModels,
   videoProviders = defaultVideoProviders,
+  language,
 }: RemixBriefProps) {
+  const t = text[language]
+
   return (
     <div className="space-y-4">
       {/* Creative Goal */}
@@ -69,17 +75,17 @@ export function RemixBrief({
           htmlFor="brief"
           className="text-sm font-medium text-foreground"
         >
-          创意目标
+          {t.creativeGoal}
         </Label>
         <Textarea
           id="brief"
-          placeholder="描述您想要的变体风格，例如：保持原视频的节奏和叙事结构，但使用更明亮的色调和更年轻化的视觉元素，适合抖音投放..."
+          placeholder={t.briefPlaceholder}
           value={brief}
           onChange={(e) => onBriefChange(e.target.value)}
           className="min-h-[100px] resize-none bg-muted/30"
         />
         <p className="text-xs text-muted-foreground">
-          AI 将分析原视频并根据您的目标生成创意变体
+          {t.briefHelp}
         </p>
       </div>
 
@@ -87,11 +93,11 @@ export function RemixBrief({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">
-            分析模型
+            {t.analysisModel}
           </Label>
           <Select value={analysisModel} onValueChange={onAnalysisModelChange}>
             <SelectTrigger className="bg-muted/30">
-              <SelectValue placeholder="选择分析模型" />
+              <SelectValue placeholder={t.selectAnalysisModel} />
             </SelectTrigger>
             <SelectContent>
               {analysisModels.map((model) => (
@@ -110,11 +116,11 @@ export function RemixBrief({
 
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">
-            视频生成
+            {t.videoGeneration}
           </Label>
           <Select value={videoProvider} onValueChange={onVideoProviderChange}>
             <SelectTrigger className="bg-muted/30">
-              <SelectValue placeholder="选择视频服务" />
+              <SelectValue placeholder={t.selectVideoProvider} />
             </SelectTrigger>
             <SelectContent>
               {videoProviders.map((provider) => (
@@ -152,12 +158,12 @@ export function RemixBrief({
         {isRunning ? (
           <>
             <Sparkles className="h-4 w-4 animate-pulse" />
-            处理中...
+            {t.processing}
           </>
         ) : (
           <>
             <Play className="h-4 w-4" />
-            开始混剪
+            {t.startRemix}
           </>
         )}
       </Button>

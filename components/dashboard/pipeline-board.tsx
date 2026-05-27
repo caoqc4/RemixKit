@@ -13,6 +13,8 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react"
+import type { DashboardLanguage } from "@/components/dashboard/i18n"
+import { text } from "@/components/dashboard/i18n"
 
 type StageStatus = "pending" | "active" | "completed" | "error"
 
@@ -27,6 +29,7 @@ interface PipelineStage {
 interface PipelineBoardProps {
   stages: PipelineStage[]
   currentStage?: string
+  language: DashboardLanguage
 }
 
 const defaultStages: PipelineStage[] = [
@@ -53,18 +56,28 @@ function getStatusIcon(status: StageStatus) {
 
 export function PipelineBoard({
   stages = defaultStages,
-  currentStage,
+  language,
 }: PipelineBoardProps) {
+  const t = text[language]
+  const stageLabels: Record<string, string> = {
+    intake: t.stageIntake,
+    evidence: t.stageEvidence,
+    "creative-read": t.stageCreativeRead,
+    "variant-plan": t.stageVariantPlan,
+    generation: t.stageGeneration,
+    output: t.stageOutput,
+  }
+
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-foreground">工作流程</h3>
+      <h3 className="text-sm font-medium text-foreground">{t.pipeline}</h3>
       <div className="relative">
         {/* Progress line */}
         <div className="absolute left-[19px] top-0 h-full w-px bg-border" />
 
         {/* Stages */}
         <div className="relative space-y-1">
-          {stages.map((stage, index) => {
+          {stages.map((stage) => {
             const Icon = stage.icon
             const isActive = stage.status === "active"
             const isCompleted = stage.status === "completed"
@@ -101,7 +114,7 @@ export function PipelineBoard({
                         !isActive && !isCompleted && "text-muted-foreground"
                       )}
                     >
-                      {stage.label}
+                      {stageLabels[stage.id] ?? stage.label}
                     </span>
                     {getStatusIcon(stage.status)}
                   </div>

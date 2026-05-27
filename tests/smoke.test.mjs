@@ -65,10 +65,14 @@ async function main() {
   assertContains("app/jobs/page.tsx", 'initialNav: "jobs"');
   assertContains("app/settings/page.tsx", 'initialNav: "providers"');
   assertContains("app/jobs/[id]/page.tsx", "jobId: id");
-  assertContains("components/dashboard/sidebar.tsx", "工作台");
-  assertContains("components/dashboard/remix-brief.tsx", "创意目标");
-  assertContains("components/dashboard/pipeline-board.tsx", "工作流程");
-  assertContains("components/dashboard/job-detail.tsx", "生成视频");
+  assertContains("components/dashboard/i18n.ts", "工作台");
+  assertContains("components/dashboard/i18n.ts", "Workbench");
+  assertContains("components/dashboard/i18n.ts", "创意目标");
+  assertContains("components/dashboard/i18n.ts", "Creative Goal");
+  assertContains("components/dashboard/i18n.ts", "工作流程");
+  assertContains("components/dashboard/i18n.ts", "Workflow");
+  assertContains("components/dashboard/i18n.ts", "生成视频");
+  assertContains("components/dashboard/i18n.ts", "Generated Videos");
 
   assertContains("README.md", "Analysis providers are peers");
   assertContains("README.md", "Deploy From GitHub to Vercel");
