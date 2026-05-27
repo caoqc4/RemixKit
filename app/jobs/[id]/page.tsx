@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, RefreshCw, Sparkles, Wand2 } from "lucide-react";
 import { AppShell } from "@/app/shell";
 import { readJob } from "@/lib/jobs/storage";
 
@@ -26,76 +26,83 @@ export default async function JobPage({ params }: PageProps) {
 
   return (
     <AppShell>
-      <div className="page-head">
-        <div className="stack">
-          <p className="eyebrow">Remix job</p>
-          <h1>{job.sourceFileName}</h1>
-          <p className="subtle">
-            Created {new Date(job.createdAt).toLocaleString()} with {job.analysisProvider} analysis and{" "}
-            {job.generationProvider} generation.
-          </p>
+      <div className="job-layout">
+        <div className="page-head">
+          <div className="stack">
+            <p className="eyebrow">Remix job</p>
+            <h1>{job.sourceFileName}</h1>
+            <p className="subtle">
+              {new Date(job.createdAt).toLocaleString()} / {job.analysisProvider} analysis / {job.generationProvider} generation
+            </p>
+          </div>
+          <span className="badge ok">
+            <CheckCircle2 size={14} />
+            {job.status}
+          </span>
         </div>
-        <span className="badge ok">
-          <CheckCircle2 size={14} />
-          {job.status}
-        </span>
-      </div>
 
-      <div className="grid">
-        <section className="panel panel-pad stack">
+        <div className="job-grid">
+          <section className="job-main stack">
           <Link className="button secondary" href="/">
             <ArrowLeft size={16} />
             Back to workbench
           </Link>
 
-          <div className="section stack">
+          <div className="job-brief">
             <h2>Creative goal</h2>
             <p className="subtle">{job.goal || "No goal provided yet."}</p>
           </div>
 
-          <form action={`/api/jobs/${job.id}/analyze`} className="section stack" method="post">
-            <h2>Creative analysis</h2>
-            <p className="subtle">
-              Run the selected peer analysis provider against the extracted evidence. Auto-select uses the first configured provider, with OpenAI first only as the default order.
-            </p>
-            <button className="button" type="submit">
-              <Sparkles size={16} />
-              Run analysis
-            </button>
-            {job.error ? (
-              <div className="provider-card">
-                <span className="badge">
-                  <AlertTriangle size={14} />
-                  Analysis error
-                </span>
-                <p className="subtle">{job.error}</p>
+          <div className="action-deck">
+            <form action={`/api/jobs/${job.id}/analyze`} className="action-card" method="post">
+              <span className="action-icon">
+                <Sparkles size={18} />
+              </span>
+              <div>
+                <h2>Analyze</h2>
+                <p className="subtle">Extract structure and risk signals.</p>
               </div>
-            ) : null}
-          </form>
+              <button className="button" type="submit">
+                Run analysis
+              </button>
+            </form>
 
-          <form action={`/api/jobs/${job.id}/generate`} className="section stack" method="post">
-            <h2>Video generation</h2>
-            <p className="subtle">
-              Generate videos from the current variant plans. Auto-select uses the public source URL in hosted mode, or a configured provider that can accept local uploads in local mode.
-            </p>
-            <button className="button" type="submit" disabled={!job.variantPlans?.length}>
-              <Sparkles size={16} />
-              Generate video variants
-            </button>
-            {!job.variantPlans?.length ? (
-              <p className="subtle">Run analysis first to create provider-ready variant prompts.</p>
-            ) : null}
-          </form>
+            <form action={`/api/jobs/${job.id}/generate`} className="action-card" method="post">
+              <span className="action-icon">
+                <Wand2 size={18} />
+              </span>
+              <div>
+                <h2>Generate</h2>
+                <p className="subtle">Submit current variant plans.</p>
+              </div>
+              <button className="button" type="submit" disabled={!job.variantPlans?.length}>
+                Generate
+              </button>
+            </form>
 
-          <form action={`/api/jobs/${job.id}/refresh-generated`} className="section stack" method="post">
-            <h2>Refresh generation tasks</h2>
-            <p className="subtle">
-              Check submitted provider tasks for completion. Completed outputs are saved back to the active storage backend.
-            </p>
-            <button className="button secondary" type="submit" disabled={!job.generatedVideos?.length}>
-              Refresh generated videos
-            </button>
-          </form>
+            <form action={`/api/jobs/${job.id}/refresh-generated`} className="action-card" method="post">
+              <span className="action-icon">
+                <RefreshCw size={18} />
+              </span>
+              <div>
+                <h2>Refresh</h2>
+                <p className="subtle">Pull completed provider outputs.</p>
+              </div>
+              <button className="button secondary" type="submit" disabled={!job.generatedVideos?.length}>
+                Refresh
+              </button>
+            </form>
+          </div>
+
+          {job.error ? (
+            <div className="provider-card">
+              <span className="badge">
+                <AlertTriangle size={14} />
+                Job error
+              </span>
+              <p className="subtle">{job.error}</p>
+            </div>
+          ) : null}
 
           <div className="section stack">
             <h2>Extracted metadata</h2>
@@ -156,9 +163,9 @@ export default async function JobPage({ params }: PageProps) {
               </>
             )}
           </div>
-        </section>
+          </section>
 
-        <aside className="stack">
+          <aside className="side-rail">
           <section className="panel panel-pad stack">
             <h2>Provider choices</h2>
             <div className="provider-grid">
@@ -212,7 +219,7 @@ export default async function JobPage({ params }: PageProps) {
               </a>
             ) : null}
             <p className="subtle">
-              Job data is stored in {job.storageMode === "vercel-blob" ? "Vercel Blob" : "storage/jobs/{job.id}"}.
+              Job data is stored in {job.storageMode === "vercel-blob" ? "Vercel Blob" : `storage/jobs/${job.id}`}.
             </p>
           </section>
 
@@ -232,7 +239,8 @@ export default async function JobPage({ params }: PageProps) {
               <p className="subtle">No warnings.</p>
             )}
           </section>
-        </aside>
+          </aside>
+        </div>
       </div>
     </AppShell>
   );

@@ -61,6 +61,9 @@ async function main() {
   assertContains("lib/jobs/create.ts", "createRemoteRemixJob");
   assertContains("app/api/jobs/route.ts", "sourceUrl");
   assertContains("lib/providers/video/runway.ts", "sourceVideoUrl");
+  assertContains("app/page.tsx", "Reference in. Original ad variants out.");
+  assertContains("app/settings/page.tsx", "Model stack control room.");
+  assertContains("app/jobs/[id]/page.tsx", "action-deck");
 
   assertContains("README.md", "Analysis providers are peers");
   assertContains("README.md", "Deploy From GitHub to Vercel");
