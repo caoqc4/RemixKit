@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { AsyncLocalStorage } from "node:async_hooks";
 import path from "node:path";
 import { z } from "zod";
 
@@ -9,6 +10,14 @@ const localConfigSchema = z.object({
 export type LocalConfig = z.infer<typeof localConfigSchema>;
 
 const configPath = path.join(process.cwd(), ".remixkit", "config.json");
+const requestCredentials = new AsyncLocalStorage<Record<string, string>>();
+
+export function runWithRequestCredentials<T>(
+  credentials: Record<string, string>,
+  callback: () => T | Promise<T>
+) {
+  return requestCredentials.run(credentials, callback);
+}
 
 export async function readLocalConfig(): Promise<LocalConfig> {
   try {
@@ -24,6 +33,11 @@ export async function hasCredential(envKey: string): Promise<boolean> {
 }
 
 export async function getCredential(envKey: string): Promise<string | null> {
+  const requestValue = requestCredentials.getStore()?.[envKey];
+  if (requestValue) {
+    return requestValue;
+  }
+
   if (process.env[envKey]) {
     return process.env[envKey] ?? null;
   }

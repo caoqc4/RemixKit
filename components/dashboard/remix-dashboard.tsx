@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
@@ -86,6 +86,7 @@ export type DashboardWarning = {
 
 export type DashboardPageProps = {
   initialNav?: "workbench" | "jobs" | "providers" | "settings"
+  keyStorageMode?: "server" | "browser"
   storageMode: "local" | "cloud"
   providers: DashboardProvider[]
   providerConfigs: DashboardProviderConfig[]
@@ -117,17 +118,18 @@ type DashboardNav = NonNullable<DashboardPageProps["initialNav"]>
 
 export function RemixDashboard({
   initialNav = "workbench",
+  keyStorageMode = "server",
   storageMode: initialStorageMode,
   providers,
-  providerConfigs,
+  providerConfigs: initialProviderConfigs,
   recentJobs,
   artifacts,
   jobDetail,
   metrics,
   generatedVideos,
   warnings,
-  analysisModels,
-  videoProviders,
+  analysisModels: initialAnalysisModels,
+  videoProviders: initialVideoProviders,
 }: DashboardPageProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [activeNav, setActiveNav] = useState<DashboardNav>(initialNav)
@@ -142,20 +144,55 @@ export function RemixDashboard({
     url?: string
   }>({ type: null })
   const [brief, setBrief] = useState("")
+  const [providerConfigs, setProviderConfigs] = useState(initialProviderConfigs)
+  const [analysisModels, setAnalysisModels] = useState(initialAnalysisModels)
+  const [videoProviders, setVideoProviders] = useState(initialVideoProviders)
   const [analysisModel, setAnalysisModel] = useState(
-    analysisModels.find((model) => model.configured)?.id ?? analysisModels[0]?.id ?? "auto"
+    initialAnalysisModels.find((model) => model.configured)?.id ?? initialAnalysisModels[0]?.id ?? "auto"
   )
   const [videoProvider, setVideoProvider] = useState(
-    videoProviders.find((provider) => provider.configured)?.id ?? videoProviders[0]?.id ?? "auto"
+    initialVideoProviders.find((provider) => provider.configured)?.id ?? initialVideoProviders[0]?.id ?? "auto"
   )
   const [isRunning, setIsRunning] = useState(false)
   const [pipelineStages, setPipelineStages] = useState<PipelineStage[]>(defaultStages)
   const [selectedJob] = useState<string | null>(jobDetail?.id ?? recentJobs[0]?.id ?? null)
   const t = text[language]
 
+  useEffect(() => {
+    if (keyStorageMode !== "browser") {
+      return
+    }
+
+    const credentials = readBrowserCredentials()
+    const configuredEnvKeys = new Set(Object.keys(credentials))
+    const nextProviderConfigs = initialProviderConfigs.map((provider) => ({
+      ...provider,
+      configured: provider.configured || Boolean(provider.apiKeyPlaceholder && configuredEnvKeys.has(provider.apiKeyPlaceholder)),
+    }))
+    const providerEnvKeys = buildProviderEnvKeyMap(nextProviderConfigs)
+    const applyConfiguredState = <T extends { providerId?: string; configured?: boolean }>(option: T): T => ({
+      ...option,
+      configured: option.configured || Boolean(option.providerId && configuredEnvKeys.has(providerEnvKeys[option.providerId] ?? "")),
+    })
+    const nextAnalysisModels = initialAnalysisModels.map(applyConfiguredState)
+    const nextVideoProviders = initialVideoProviders.map(applyConfiguredState)
+
+    queueMicrotask(() => {
+      setProviderConfigs(nextProviderConfigs)
+      setAnalysisModels(nextAnalysisModels)
+      setVideoProviders(nextVideoProviders)
+      setAnalysisModel((current) => nextAnalysisModels.find((model) => model.id === current)?.configured
+        ? current
+        : nextAnalysisModels.find((model) => model.configured)?.id ?? current)
+      setVideoProvider((current) => nextVideoProviders.find((provider) => provider.id === current)?.configured
+        ? current
+        : nextVideoProviders.find((provider) => provider.configured)?.id ?? current)
+    })
+  }, [initialAnalysisModels, initialProviderConfigs, initialVideoProviders, keyStorageMode])
+
   const providerStatus = {
-    analysis: providers.some((p) => p.type === "analysis" && p.configured),
-    video: providers.some((p) => p.type === "video" && p.configured),
+    analysis: providers.some((p) => p.type === "analysis" && p.configured) || analysisModels.some((model) => model.configured),
+    video: providers.some((p) => p.type === "video" && p.configured) || videoProviders.some((provider) => provider.configured),
   }
 
   const selectedAnalysisModel = analysisModels.find((model) => model.id === analysisModel)
@@ -188,6 +225,9 @@ export function RemixDashboard({
       formData.set("goal", brief)
       formData.set("analysisProvider", selectedAnalysis?.providerId ?? analysisModel)
       formData.set("generationProvider", selectedVideo?.providerId ?? videoProvider)
+      if (keyStorageMode === "browser") {
+        formData.set("remixkitCredentials", JSON.stringify(readBrowserCredentials()))
+      }
 
       const response = await fetch("/api/jobs", { method: "POST", body: formData })
 
@@ -212,7 +252,7 @@ export function RemixDashboard({
     } finally {
       setIsRunning(false)
     }
-  }, [analysisModel, analysisModels, brief, canStart, source, t.submitFailed, t.submitJob, videoProvider, videoProviders])
+  }, [analysisModel, analysisModels, brief, canStart, keyStorageMode, source, t.submitFailed, t.submitJob, videoProvider, videoProviders])
 
   const handleViewJob = useCallback((jobId: string) => {
     window.location.href = `/jobs/${jobId}`
@@ -226,21 +266,32 @@ export function RemixDashboard({
     const provider = providerConfigs.find((item) => item.id === providerId)
     if (!provider?.apiKeyPlaceholder) return
 
+    if (keyStorageMode === "browser") {
+      writeBrowserCredential(provider.apiKeyPlaceholder, key)
+      window.location.reload()
+      return
+    }
+
     await fetch("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ envKey: provider.apiKeyPlaceholder, value: key }),
     })
     window.location.reload()
-  }, [providerConfigs])
+  }, [keyStorageMode, providerConfigs])
 
   const runJobAction = useCallback(async (action: "analyze" | "generate" | "refresh-generated") => {
     const jobId = jobDetail?.id
     if (!jobId) return
 
-    await fetch(`/api/jobs/${jobId}/${action}`, { method: "POST" })
+    await fetch(`/api/jobs/${jobId}/${action}`, {
+      method: "POST",
+      headers: keyStorageMode === "browser"
+        ? { "x-remixkit-credentials": JSON.stringify(readBrowserCredentials()) }
+        : undefined,
+    })
     window.location.href = `/jobs/${jobId}`
-  }, [jobDetail])
+  }, [jobDetail, keyStorageMode])
 
   // Mobile sidebar
   const sidebarContent = (
@@ -478,6 +529,7 @@ export function RemixDashboard({
                     videoProvider={videoProvider}
                     onAnalysisModelChange={setAnalysisModel}
                     onVideoProviderChange={setVideoProvider}
+                    keyStorageMode={keyStorageMode}
                   />
                 </div>
               </div>
@@ -555,4 +607,53 @@ export function RemixDashboard({
       </div>
     </div>
   )
+}
+
+const browserCredentialStorageKey = "remixkit.credentials.v1"
+
+function readBrowserCredentials() {
+  if (typeof window === "undefined") {
+    return {}
+  }
+
+  try {
+    const raw = window.localStorage.getItem(browserCredentialStorageKey)
+    const parsed = raw ? JSON.parse(raw) as unknown : {}
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {}
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>)
+        .filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1].trim()))
+        .map(([key, value]) => [key, value.trim()])
+    )
+  } catch {
+    return {}
+  }
+}
+
+function writeBrowserCredential(envKey: string, value: string) {
+  const credentials = readBrowserCredentials()
+  window.localStorage.setItem(
+    browserCredentialStorageKey,
+    JSON.stringify({ ...credentials, [envKey]: value.trim() })
+  )
+}
+
+function buildProviderEnvKeyMap(providerConfigs: DashboardProviderConfig[]): Record<string, string> {
+  const entries: Record<string, string> = Object.fromEntries(
+    providerConfigs
+      .filter((provider): provider is DashboardProviderConfig & { apiKeyPlaceholder: string } =>
+        Boolean(provider.apiKeyPlaceholder)
+      )
+      .flatMap((provider) => {
+        const providerId = provider.id.split("-").slice(1).join("-")
+        return providerId ? [[providerId, provider.apiKeyPlaceholder]] : []
+      })
+  )
+  if (entries.fal) {
+    entries["fal-openrouter"] = entries.fal
+  }
+  return entries
 }

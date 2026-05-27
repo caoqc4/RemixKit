@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { runWithRequestCredentials } from "@/lib/config/local-config";
+import { readCredentialsFromRequest } from "@/lib/config/request-credentials";
 import { generateRemixJobVideos } from "@/lib/generation/run";
 
 export const runtime = "nodejs";
@@ -11,9 +13,10 @@ type RouteContext = {
 
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
+  const credentials = readCredentialsFromRequest(request);
 
   try {
-    const job = await generateRemixJobVideos(id);
+    const job = await runWithRequestCredentials(credentials, () => generateRemixJobVideos(id));
     return NextResponse.redirect(new URL(`/jobs/${job.id}`, request.url), 303);
   } catch (error) {
     return NextResponse.json(

@@ -123,6 +123,7 @@ export async function getDashboardData(options: DashboardDataOptions = {}): Prom
 
   return {
     initialNav: options.initialNav ?? "workbench",
+    keyStorageMode: process.env.VERCEL ? "browser" : "server",
     storageMode: getStorageMode() === "vercel-blob" ? "cloud" : "local",
     providers: [
       ...statuses.analysis.map((provider) => ({

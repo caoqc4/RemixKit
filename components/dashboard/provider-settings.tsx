@@ -53,6 +53,7 @@ interface ProviderSettingsProps {
   videoProvider: string
   onAnalysisModelChange: (model: string) => void
   onVideoProviderChange: (provider: string) => void
+  keyStorageMode?: "server" | "browser"
 }
 
 export function ProviderSettings({
@@ -65,6 +66,7 @@ export function ProviderSettings({
   videoProvider,
   onAnalysisModelChange,
   onVideoProviderChange,
+  keyStorageMode = "server",
 }: ProviderSettingsProps) {
   const [editingProvider, setEditingProvider] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState("")
@@ -132,6 +134,15 @@ export function ProviderSettings({
             missingText={t.needsConfig}
             onChange={onVideoProviderChange}
           />
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card/50 p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <p className="text-sm text-muted-foreground">
+            {keyStorageMode === "browser" ? t.browserKeyNotice : t.serverKeyNotice}
+          </p>
         </div>
       </div>
 
